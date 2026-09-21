@@ -32,4 +32,7 @@ def create_app():
     from app.routes.pharmacy import pharmacy_bp
     app.register_blueprint(pharmacy_bp)
 
+    from app.routes.lab import lab_bp
+    app.register_blueprint(lab_bp)
+
     return app

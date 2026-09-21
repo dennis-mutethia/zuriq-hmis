@@ -291,3 +291,41 @@ class PrescriptionItem(db.Model):
     dispensed_at = db.Column(db.DateTime(timezone=True))
 
     product = db.relationship("Product")
+
+
+class Test(db.Model):
+    __tablename__ = "tests"
+    test_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    specimen = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+
+class LabRequest(db.Model):
+    __tablename__ = "lab_requests"
+
+    lab_request_id = db.Column(db.Integer, primary_key=True)
+    visit_id = db.Column(db.Integer, db.ForeignKey("visits.visit_id"))
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"), nullable=False)
+    requested_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    technologist = db.Column(db.Text)
+    date_time_requested = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    date_time_done = db.Column(db.DateTime(timezone=True))
+    is_done = db.Column(db.Boolean, nullable=False, default=False)
+    reason_not_done = db.Column(db.Text)
+
+    patient = db.relationship("Patient")
+    visit = db.relationship("Visit")
+    items = db.relationship("LabRequestItem", backref="lab_request", cascade="all, delete-orphan")
+
+
+class LabRequestItem(db.Model):
+    __tablename__ = "lab_request_items"
+
+    lab_request_item_id = db.Column(db.Integer, primary_key=True)
+    lab_request_id = db.Column(db.Integer, db.ForeignKey("lab_requests.lab_request_id"), nullable=False)
+    test_id = db.Column(db.Integer, db.ForeignKey("tests.test_id"))
+    test_name = db.Column(db.Text, nullable=False)
+    conclusion = db.Column(db.Text)
+
+    test = db.relationship("Test")

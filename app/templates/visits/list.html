@@ -57,6 +57,8 @@
                     {% endif %}
                     <a href="{{ url_for('pharmacy.new_prescription', visit_id=v.visit_id) }}"
                        class="text-ink/70 hover:text-ink font-medium ml-3">Prescribe</a>
+                    <a href="{{ url_for('lab.new_request', visit_id=v.visit_id) }}"
+                       class="text-ink/70 hover:text-ink font-medium ml-3">Lab</a>
                 </td>
             </tr>
             {% else %}

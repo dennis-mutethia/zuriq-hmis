@@ -155,6 +155,28 @@ run `schema.sql`, which now includes all four modules.
 Run `migrations/migration_add_pharmacy.sql` on an existing database, or
 `schema.sql` for a fresh install (now covers all five modules).
 
+**Lab** (`/lab`)
+- Request one or more tests from a visit (checkbox list against the test
+  catalog)
+- Enter results as free text per test, mark technologist, close out the
+  request
+- Simple test catalog admin (`/lab/tests`) with an optional specimen note
+- Visit list shows a "Lab" shortcut (always available, same reasoning as
+  Prescribe — a visit can have more than one lab request)
+
+Run `migrations/migration_add_lab.sql` on an existing database, or
+`schema.sql` for a fresh install (now covers all six modules).
+
+## What's intentionally deferred (Lab)
+
+- **Structured component-level results** — the original app has a
+  `tbltestcomponents` table for per-analyte results with normal ranges and
+  units (e.g. Hemoglobin: 12–16 g/dL), but nothing in the decompiled source
+  links it to individual test requests. Results here are free text per
+  test, not per component.
+- **Reference ranges / flagging abnormal results** — no automatic
+  high/low flagging yet, since there's no structured range data wired in.
+
 ## What's intentionally deferred (Pharmacy)
 
 - **Insurance/scheme drug pricing** — the original app has ~20 per-insurer
@@ -179,7 +201,9 @@ Run `migrations/migration_add_pharmacy.sql` on an existing database, or
 
 ## Suggested next module
 
-Lab (test requests + results) — the other common next step off a visit,
-and doesn't depend on anything not already in place. After that, linking
-Pharmacy and Billing together (so dispensed items bill automatically) is
-worth doing before adding more new modules.
+All six core clinical/financial modules exist now (Patients, Visits,
+Billing, Admissions, Pharmacy, Lab). Before adding anything new, the
+highest-value work is probably wiring the ones that exist together:
+Pharmacy/Lab → Billing (so dispensed items and tests actually bill), and
+eventually real authentication (recall `system_users` is still a stub with
+no login).

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Request Lab Tests — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Lab{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Request Lab Tests</h1>
+
+<div class="bg-white rounded-xl border border-ink/10 p-4 mb-6">
+    <div class="font-semibold text-ink">{{ patient.full_name }}</div>
+    <div class="text-sm text-muted">OP: <span class="font-mono">{{ patient.out_patient_no }}</span> · Visit: {{ visit.visit_datetime.strftime("%d %b %Y %H:%M") }}</div>
+</div>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-lg">
+    <label class="block text-sm text-muted mb-2">Select Tests</label>
+    <div class="space-y-2 mb-6">
+        {% for t in tests %}
+        <label class="flex items-center gap-3 border border-ink/10 rounded-lg px-3 py-2 text-sm hover:bg-canvas/60 cursor-pointer">
+            <input type="checkbox" name="test_id" value="{{ t.test_id }}" class="rounded border-ink/20">
+            <span class="font-medium">{{ t.name }}</span>
+            {% if t.specimen %}<span class="text-muted text-xs">({{ t.specimen }})</span>{% endif %}
+        </label>
+        {% else %}
+        <p class="text-muted/60 text-sm">No tests in the catalog yet — <a href="{{ url_for('lab.new_test') }}" class="text-brand-600 hover:underline">add one</a>.</p>
+        {% endfor %}
+    </div>
+
+    <div class="flex items-center gap-3 pt-4 border-t border-ink/10">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Request Tests
+        </button>
+        <a href="{{ url_for('visits.list_visits') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

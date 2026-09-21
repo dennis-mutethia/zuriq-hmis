@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Lab Results — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Lab{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-semibold text-ink">{{ lab_request.patient.full_name }}</h1>
+        <p class="text-sm text-muted">OP: <span class="font-mono">{{ lab_request.patient.out_patient_no }}</span> · Requested {{ lab_request.date_time_requested.strftime("%d %b %Y %H:%M") }}</p>
+    </div>
+    {% if lab_request.is_done %}
+    <span class="text-sm bg-success/10 text-success px-3 py-1 rounded-full">Done {{ lab_request.date_time_done.strftime("%d %b %Y") }}</span>
+    {% else %}
+    <span class="text-sm bg-warn/10 text-warn px-3 py-1 rounded-full">Pending</span>
+    {% endif %}
+</div>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-2xl space-y-5">
+    {% for item in lab_request.items %}
+    <div>
+        <label class="block text-sm font-medium text-ink mb-1">{{ item.test_name }}</label>
+        <textarea name="conclusion_{{ item.lab_request_item_id }}" rows="2"
+                  {% if lab_request.is_done %}disabled{% endif %}
+                  class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm {% if lab_request.is_done %}bg-canvas text-muted{% endif %}"
+                  placeholder="Result / conclusion">{{ item.conclusion or '' }}</textarea>
+    </div>
+    {% endfor %}
+
+    {% if not lab_request.is_done %}
+    <div>
+        <label class="block text-sm text-muted mb-1">Technologist</label>
+        <input name="technologist" class="w-full sm:w-64 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div class="flex items-center gap-3 pt-2 border-t border-ink/10">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Results
+        </button>
+        <a href="{{ url_for('lab.list_requests') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+    {% else %}
+    <p class="text-sm text-muted">Technologist: {{ lab_request.technologist or "—" }}</p>
+    {% endif %}
+</form>
+
+{% endblock %}

@@ -36,13 +36,27 @@ class GroupAccount(db.Model):
     receivable_acc_sub_acc_id = db.Column(db.Integer)
 
 
+class Role(db.Model):
+    __tablename__ = "roles"
+    role_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+    is_admin_role = db.Column(db.Boolean, nullable=False, default=False)
+
+
 class SystemUser(UserMixin, db.Model):
     __tablename__ = "system_users"
     system_user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.Text, nullable=False, unique=True)
     password_hash = db.Column(db.Text)
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.role_id"), nullable=False)
     is_active_flag = db.Column("is_active", db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    role = db.relationship("Role")
+
+    @property
+    def is_admin(self):
+        return bool(self.role and self.role.is_admin_role)
 
     def get_id(self):
         # flask-login needs a string id

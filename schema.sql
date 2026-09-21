@@ -47,10 +47,30 @@ CREATE TABLE group_accounts (
 -- Stub only: the real Security/Users module (auth, roles, permissions,
 -- password hashing) is a separate module. This exists so patients.registered_by
 -- has something to reference.
+-- A lookup table rather than a hardcoded admin/staff pair, so adding a
+-- role later (once the UI to create them exists) is just a row, not a
+-- migration. is_admin_role is the only thing the app currently checks —
+-- named roles beyond Admin/Staff are labels for now, not yet enforced
+-- differently from each other (see README).
+CREATE TABLE roles (
+    role_id        SERIAL PRIMARY KEY,
+    name           TEXT NOT NULL UNIQUE,
+    is_admin_role  BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+INSERT INTO roles (name, is_admin_role) VALUES
+    ('Admin', TRUE),
+    ('Staff', FALSE),
+    ('Reception', FALSE),
+    ('Pharmacy', FALSE),
+    ('Clinical Officer', FALSE),
+    ('Lab', FALSE);
+
 CREATE TABLE system_users (
     system_user_id  SERIAL PRIMARY KEY,
     username         TEXT NOT NULL UNIQUE,
     password_hash    TEXT,             -- set by the app (werkzeug hash), never plaintext
+    role_id          INTEGER NOT NULL REFERENCES roles(role_id),
     is_active        BOOLEAN NOT NULL DEFAULT TRUE,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );

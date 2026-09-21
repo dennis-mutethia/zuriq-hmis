@@ -16,6 +16,20 @@
                class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         <p class="text-xs text-muted/60 mt-1">At least 8 characters. Share it with them directly — there's no email/reset flow yet.</p>
     </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Role</label>
+        <select name="role_id" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            {% for role in roles %}
+            <option value="{{ role.role_id }}" {% if not role.is_admin_role and role.name == 'Staff' %}selected{% endif %}>
+                {{ role.name }}{% if role.is_admin_role %} — can also manage users and delete patients{% endif %}
+            </option>
+            {% endfor %}
+        </select>
+        <p class="text-xs text-muted/60 mt-1">
+            Only "Admin" changes what a user can access right now — the other roles are
+            labels for organizing staff, not yet enforced differently from each other.
+        </p>
+    </div>
     <div class="flex items-center gap-3 pt-2">
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
             Create Account

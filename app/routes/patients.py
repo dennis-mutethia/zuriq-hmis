@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app import db
 from app.models import Patient, IdType, Nationality, GroupAccount
+from app.routes.auth import admin_required
 
 patients_bp = Blueprint("patients", __name__, url_prefix="/patients")
 
@@ -105,6 +106,7 @@ def edit_patient(patient_id):
 
 @patients_bp.route("/<int:patient_id>/delete", methods=["POST"])
 @login_required
+@admin_required
 def delete_patient(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     db.session.delete(patient)

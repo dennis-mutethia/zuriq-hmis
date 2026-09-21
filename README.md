@@ -167,6 +167,71 @@ Run `migrations/migration_add_pharmacy.sql` on an existing database, or
 Run `migrations/migration_add_lab.sql` on an existing database, or
 `schema.sql` for a fresh install (now covers all six modules).
 
+## Roles
+
+Roles live in their own `roles` table now (not a hardcoded text column),
+seeded with **Admin, Staff, Reception, Pharmacy, Clinical Officer, Lab**.
+This is groundwork for the real thing you'll eventually want — an admin
+screen to create custom roles with specific permissions — without that
+being built yet. Today, only one bit matters: `roles.is_admin_role`.
+Everything else is a label.
+
+Practically, that means:
+- **Admin** unlocks the two actions that matter today (create users,
+  delete patients) — see below
+- **Staff, Reception, Pharmacy, Clinical Officer, Lab** are currently
+  *identical* in what they can do — full access to every module. You can
+  assign someone "Pharmacy" today for clarity in the Users list, but it
+  doesn't yet restrict them to Pharmacy. That's the real feature (roles →
+  permissions → enforcement) still ahead.
+
+If you already ran the two-tier version of this from before, run
+`migrations/migration_roles_table.sql` — it converts the old text column
+to the new table and preserves existing admin/staff assignments. Fresh
+installs: `schema.sql` already has the final shape.
+
+In terms of actual enforced behavior, it's the smallest thing that closes
+the two riskiest gaps that existed before:
+
+- **Only admins can create new user accounts** (`/users/new`) — previously
+  any logged-in user could
+- **Only admins can delete a patient record** (destructive, no undo)
+
+Everything else — registering patients, visits, billing, pharmacy, lab,
+admissions, recording payments — stays open to any logged-in staff member,
+since restricting those would make the app harder to use for no real
+safety gain at this scale.
+
+The "Users" section of the sidebar only appears for admins; a staff account
+trying to reach `/users/new` directly gets redirected with a message
+rather than a bare 403.
+
+**Bootstrapping:** `flask create-admin` always creates an **admin** account
+(there'd be no admin at all otherwise). Additional staff accounts go
+through `/users` → "+ Add User" once an admin is logged in, with a role
+picker on that form.
+
+**If you already have users from before this change:** run
+`migrations/migration_add_roles.sql`, then promote your own account:
+
+```sql
+UPDATE system_users SET role = 'admin' WHERE username = 'your-username';
+```
+
+Everyone else defaults to `staff`.
+
+### What's intentionally deferred (Roles)
+
+- **Granular permissions** — it's admin/staff, not a configurable matrix
+  (e.g. "can record payments but not void them"). Fine for a small team,
+  not fine at real scale.
+- **Self-service role changes** — an admin can set a new user's role at
+  creation time, but there's no "edit an existing user's role" screen yet;
+  that's a direct-database change for now.
+- **Per-module restrictions** — e.g. locking Pharmacy dispensing to actual
+  pharmacy staff, or Lab results to lab techs. Everything staff-level is
+  still all-or-nothing across every module.
+
 ## Reports
 
 `/reports` — the "nice dashboards" you mentioned wanting eventually. Built
@@ -299,7 +364,9 @@ production, not the `dev-secret-change-me` default.
 
 ## Suggested next module
 
-The end-to-end flow and reporting both exist now. The remaining real gap is
-**roles** — every logged-in user can still do everything (discharge a
-patient, void a bill, add another user). Worth doing before more than a
-couple of trusted people are using this day to day.
+Every gap flagged as a real risk (no login, no billing links, no roles) is
+now closed. What's left in the "deferred" notes throughout this README is
+genuine feature depth, not safety gaps — insurance/scheme pricing, ward
+transfers, structured lab results, password reset, and so on. Worth
+picking based on what actually gets used, not building further ahead of
+real usage.

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Patients — Zuriq-HMIS{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-slate-900">Patients</h1>
+    <a href="{{ url_for('patients.new_patient') }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+        + Register Patient
+    </a>
+</div>
+
+<form method="get" class="mb-6">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by name, OP number, or ID number…"
+           class="w-full sm:w-96 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+</form>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">OP No.</th>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">Sex</th>
+                <th class="px-4 py-3">Telephone</th>
+                <th class="px-4 py-3">Account</th>
+                <th class="px-4 py-3">Registered</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for p in patients %}
+            <tr class="hover:bg-slate-50">
+                <td class="px-4 py-3 font-medium text-slate-700">{{ p.out_patient_no or "—" }}</td>
+                <td class="px-4 py-3">{{ p.full_name }}</td>
+                <td class="px-4 py-3">{{ p.sex }}</td>
+                <td class="px-4 py-3">{{ p.telephone1 or "—" }}</td>
+                <td class="px-4 py-3">{{ p.group_account.name if p.group_account else "Cash" }}</td>
+                <td class="px-4 py-3 text-slate-500">{{ p.date_registered.strftime("%d %b %Y") if p.date_registered else "—" }}</td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('patients.edit_patient', patient_id=p.patient_id) }}"
+                       class="text-brand-600 hover:text-brand-700 font-medium">Edit</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="px-4 py-8 text-center text-slate-400">No patients found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

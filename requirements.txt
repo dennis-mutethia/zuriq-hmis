@@ -1,9 +1,5 @@
 dotenv
 flask
-flask-cors
-flask-wtf
-flask-talisman
-pycryptodome
+flask-sqlalchemy
 psycopg2-binary
 requests
-wtforms

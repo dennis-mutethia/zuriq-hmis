@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Zuriq-HMIS{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#f0f9ff', 100: '#e0f2fe', 500: '#0284c7',
+                600: '#0369a1', 700: '#075985'
+              }
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <nav class="bg-brand-700 text-white shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="{{ url_for('patients.list_patients') }}" class="text-lg font-semibold tracking-tight">Zuriq-HMIS</a>
+            <div class="text-sm text-brand-100">Patient Registration</div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="mb-4 rounded-lg px-4 py-3 text-sm
+                {% if category == 'success' %} bg-green-50 text-green-800 border border-green-200
+                {% elif category == 'info' %} bg-blue-50 text-blue-800 border border-blue-200
+                {% else %} bg-red-50 text-red-800 border border-red-200 {% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

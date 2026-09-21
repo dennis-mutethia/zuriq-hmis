@@ -14,4 +14,7 @@ def create_app():
     from app.routes.patients import patients_bp
     app.register_blueprint(patients_bp)
 
+    from app.routes.visits import visits_bp
+    app.register_blueprint(visits_bp)
+
     return app

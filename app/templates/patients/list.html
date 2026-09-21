@@ -37,7 +37,9 @@
                 <td class="px-4 py-3">{{ p.telephone1 or "—" }}</td>
                 <td class="px-4 py-3">{{ p.group_account.name if p.group_account else "Cash" }}</td>
                 <td class="px-4 py-3 text-slate-500">{{ p.date_registered.strftime("%d %b %Y") if p.date_registered else "—" }}</td>
-                <td class="px-4 py-3 text-right">
+                <td class="px-4 py-3 text-right space-x-3">
+                    <a href="{{ url_for('visits.new_visit', patient_id=p.patient_id) }}"
+                       class="text-slate-500 hover:text-slate-700">Start Visit</a>
                     <a href="{{ url_for('patients.edit_patient', patient_id=p.patient_id) }}"
                        class="text-brand-600 hover:text-brand-700 font-medium">Edit</a>
                 </td>

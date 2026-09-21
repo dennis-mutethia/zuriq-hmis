@@ -84,3 +84,32 @@ class Patient(db.Model):
     def full_name(self):
         parts = [self.surname, self.other_names, self.third_name]
         return " ".join(p for p in parts if p)
+
+
+class Clinic(db.Model):
+    __tablename__ = "clinics"
+    clinic_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+
+
+class Visit(db.Model):
+    __tablename__ = "visits"
+
+    visit_id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"), nullable=False)
+    clinic_id = db.Column(db.Integer, db.ForeignKey("clinics.clinic_id"))
+    visit_datetime = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    age = db.Column(db.Integer)
+    age_months = db.Column(db.Integer)
+    age_weeks = db.Column(db.Integer)
+    doctor = db.Column(db.Text)
+    nurse = db.Column(db.Text)
+    hpi = db.Column(db.Text)
+    summary = db.Column(db.Text)
+    is_processed = db.Column(db.Boolean, nullable=False, default=False)
+    is_admitted = db.Column(db.Boolean, nullable=False, default=False)
+    is_consultant = db.Column(db.Boolean, nullable=False, default=False)
+    registered_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+
+    patient = db.relationship("Patient")
+    clinic = db.relationship("Clinic")

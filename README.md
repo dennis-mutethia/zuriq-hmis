@@ -35,11 +35,16 @@ trigger fills them in as soon as a patient row is inserted:
 - `out_patient_no` → `ZH-OP-{patient_id}` (e.g. `ZH-OP-1042`)
 - `in_patient_no` → `ZH-IP-{patient_id}` (e.g. `ZH-IP-1042`)
 
-They're not editable in the app — the registration form just shows
-"Assigned automatically on save", and the edit form shows the assigned
-value(s) read-only. If you ever need to import legacy records with their
-original numbers, insert with an explicit value for that column — the
-trigger only fills it in when it's left `NULL`.
+`out_patient_no` is not editable in the app — the registration form just
+shows "Assigned automatically on save", and the edit form shows the
+assigned value read-only. If you ever need to import legacy records with
+their original numbers, insert with an explicit value for that column —
+the trigger only fills it in when it's left `NULL`.
+
+`in_patient_no` is deliberately **not** generated at registration — it
+stays `NULL` for every patient until they're actually admitted. The
+database has `assign_inpatient_number(patient_id)` ready for the Admission
+module to call when that module is built; it's not wired to anything yet.
 
 ## 3. Get your connection string
 
@@ -64,10 +69,22 @@ list with a "Register Patient" button.
 
 ## What's implemented
 
-- Full CRUD for patient registration (list with search, create, edit, delete)
-- Dropdowns for ID Type, Nationality, and Group Account (billing account),
-  matching the original app's patient registration form fields
-- Tailwind-based modern styling (via CDN — no build step needed)
+**Patient Registration**
+- Full CRUD (list with search, create, edit, delete)
+- Dropdowns for ID Type, Nationality, and Group Account (billing account)
+- OP number auto-generated as `ZH-OP-{patient_id}` on save (see below)
+
+**OPD Visits** (`/visits`)
+- Search for a patient, then record a visit against them (clinic, doctor,
+  nurse, HPI, and whether it's a specialist consultation vs regular OPD)
+- Patient's age/age-months/age-weeks is snapshotted automatically from their
+  date of birth at the moment of the visit (matches the original app's
+  under-5 vs adult distinction, used in Kenya MOH reporting forms)
+- Visit list with search by patient name or OP number
+
+If you're setting this up fresh, run `schema.sql` (it now includes both
+modules). If you already ran the Patient-only version, run
+`migration_add_visits.sql` to add just the new tables.
 
 ## What's intentionally deferred
 
@@ -83,5 +100,6 @@ list with a "Register Patient" button.
 
 ## Suggested next module
 
-OPD Visit / Queue — the natural next step after a patient exists, and it's
-what most other modules (billing, lab, consultations) hang off of.
+Billing (medical bills off a visit) or Admissions (which is also where
+`in_patient_no` finally gets assigned) — both hang directly off the
+`visits` table now in place.

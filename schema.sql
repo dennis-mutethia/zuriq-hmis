@@ -95,29 +95,78 @@ CREATE INDEX idx_patients_surname_othernames ON patients (surname, other_names);
 CREATE INDEX idx_patients_out_patient_no ON patients (out_patient_no);
 CREATE INDEX idx_patients_id_number ON patients (id_number);
 
--- ── Auto-generate OP/IP numbers ─────────────────────────────────────────
+-- ── Auto-generate OP number ──────────────────────────────────────────────
 -- patient_id is only known once the row exists (SERIAL), so an AFTER INSERT
--- trigger fills these in right after the insert. COALESCE means an explicit
+-- trigger fills this in right after the insert. COALESCE means an explicit
 -- value passed in by the app (e.g. when migrating legacy records) is kept
 -- instead of being overwritten.
+--
+-- in_patient_no is intentionally NOT generated here — it stays NULL until
+-- the patient is actually admitted (a separate event, built in the
+-- Admission module). See assign_inpatient_number() below, which the
+-- Admission module will call when that module is built.
 
-CREATE OR REPLACE FUNCTION assign_patient_numbers()
+CREATE OR REPLACE FUNCTION assign_outpatient_number()
 RETURNS TRIGGER AS $$
 BEGIN
     UPDATE patients
-    SET out_patient_no = COALESCE(out_patient_no, 'ZH-OP-' || NEW.patient_id),
-        in_patient_no  = COALESCE(in_patient_no,  'ZH-IP-' || NEW.patient_id)
+    SET out_patient_no = COALESCE(out_patient_no, 'ZH-OP-' || NEW.patient_id)
     WHERE patient_id = NEW.patient_id;
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_assign_patient_numbers
+CREATE TRIGGER trg_assign_outpatient_number
 AFTER INSERT ON patients
 FOR EACH ROW
-EXECUTE FUNCTION assign_patient_numbers();
+EXECUTE FUNCTION assign_outpatient_number();
+
+-- Called by the future Admission module at the moment a patient is admitted
+-- (not wired to any trigger yet — there's no admissions table to hang it off
+-- of until that module exists).
+CREATE OR REPLACE FUNCTION assign_inpatient_number(p_patient_id INTEGER)
+RETURNS TEXT AS $$
+DECLARE
+    v_ip_no TEXT;
+BEGIN
+    UPDATE patients
+    SET in_patient_no = COALESCE(in_patient_no, 'ZH-IP-' || p_patient_id)
+    WHERE patient_id = p_patient_id
+    RETURNING in_patient_no INTO v_ip_no;
+    RETURN v_ip_no;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ── Module: OPD Visits ───────────────────────────────────────────────────
+-- Source: tblclinics, tblmedicalinfos (via BaseClasses/_MedicalInfo.cs)
+
+CREATE TABLE clinics (
+    clinic_id   SERIAL PRIMARY KEY,
+    name        TEXT NOT NULL
+);
+
+CREATE TABLE visits (
+    visit_id          SERIAL PRIMARY KEY,
+    patient_id        INTEGER NOT NULL REFERENCES patients(patient_id),
+    clinic_id         INTEGER REFERENCES clinics(clinic_id),
+    visit_datetime    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    age               INTEGER,          -- age snapshot at time of visit (years)
+    age_months        INTEGER,          -- used for under-5 patients, per original MOH forms
+    age_weeks         INTEGER,
+    doctor            TEXT,             -- free text in the original app, not a FK
+    nurse             TEXT,             -- free text in the original app, not a FK
+    hpi               TEXT,             -- "History of Presenting Illness"
+    summary           TEXT,
+    is_processed      BOOLEAN NOT NULL DEFAULT FALSE,  -- true once billed
+    is_admitted       BOOLEAN NOT NULL DEFAULT FALSE,
+    is_consultant     BOOLEAN NOT NULL DEFAULT FALSE,  -- specialist consult vs regular OPD
+    registered_by     INTEGER REFERENCES system_users(system_user_id)
+);
+
+CREATE INDEX idx_visits_patient_id ON visits (patient_id);
+CREATE INDEX idx_visits_visit_datetime ON visits (visit_datetime);
 
 -- ── Optional starter data ───────────────────────────────────────────────
 -- Uncomment and adjust to your context before running, or add via the app later.
 
--- INSERT INTO id_types (id_type) VALUES ('National ID'), ('Passport'), ('Birth Certificate');
+INSERT INTO id_types (id_type) VALUES ('National ID'), ('Passport'), ('Birth Certificate');

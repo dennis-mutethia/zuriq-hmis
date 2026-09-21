@@ -14,17 +14,17 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm text-muted mb-1">Surname *</label>
-                <input name="surname" required value="{{ patient.surname if patient else '' }}"
+                <input name="surname" required value="{{ (patient and patient.surname) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Other Names *</label>
-                <input name="other_names" required value="{{ patient.other_names if patient else '' }}"
+                <input name="other_names" required value="{{ (patient and patient.other_names) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Third Name</label>
-                <input name="third_name" value="{{ patient.third_name if patient else '' }}"
+                <input name="third_name" value="{{ (patient and patient.third_name) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
             </div>
             <div>
@@ -42,7 +42,7 @@
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Occupation</label>
-                <input name="occupation" value="{{ patient.occupation if patient else '' }}"
+                <input name="occupation" value="{{ (patient and patient.occupation) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
         </div>
@@ -62,7 +62,7 @@
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">ID Number</label>
-                <input name="id_number" value="{{ patient.id_number if patient else '' }}"
+                <input name="id_number" value="{{ (patient and patient.id_number) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
@@ -82,32 +82,32 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm text-muted mb-1">Telephone 1</label>
-                <input name="telephone1" value="{{ patient.telephone1 if patient else '' }}"
+                <input name="telephone1" value="{{ (patient and patient.telephone1) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Telephone 2</label>
-                <input name="telephone2" value="{{ patient.telephone2 if patient else '' }}"
+                <input name="telephone2" value="{{ (patient and patient.telephone2) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Email</label>
-                <input type="email" name="email_address" value="{{ patient.email_address if patient else '' }}"
+                <input type="email" name="email_address" value="{{ (patient and patient.email_address) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Residence</label>
-                <input name="residence" value="{{ patient.residence if patient else '' }}"
+                <input name="residence" value="{{ (patient and patient.residence) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">City/Town</label>
-                <input name="city_town" value="{{ patient.city_town if patient else '' }}"
+                <input name="city_town" value="{{ (patient and patient.city_town) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Postal Address</label>
-                <input name="postal_address" value="{{ patient.postal_address if patient else '' }}"
+                <input name="postal_address" value="{{ (patient and patient.postal_address) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
         </div>
@@ -118,17 +118,17 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm text-muted mb-1">Name</label>
-                <input name="next_of_kin" value="{{ patient.next_of_kin if patient else '' }}"
+                <input name="next_of_kin" value="{{ (patient and patient.next_of_kin) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Relationship</label>
-                <input name="next_of_kin_relationship" value="{{ patient.next_of_kin_relationship if patient else '' }}"
+                <input name="next_of_kin_relationship" value="{{ (patient and patient.next_of_kin_relationship) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-sm text-muted mb-1">Contact</label>
-                <input name="next_of_kin_contact" value="{{ patient.next_of_kin_contact if patient else '' }}"
+                <input name="next_of_kin_contact" value="{{ (patient and patient.next_of_kin_contact) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
         </div>
@@ -149,7 +149,7 @@
             {% if patient %}
             <div>
                 <label class="block text-sm text-muted mb-1">OP / IP Number</label>
-                <input value="{{ patient.out_patient_no }}{% if patient.in_patient_no %} / {{ patient.in_patient_no }}{% endif %}"
+                <input value="{{ patient.out_patient_no or '' }}{% if patient.in_patient_no %} / {{ patient.in_patient_no }}{% endif %}"
                        disabled
                        class="w-full border border-ink/10 bg-canvas text-muted rounded-lg px-3 py-2 text-sm">
             </div>
@@ -162,7 +162,7 @@
             {% endif %}
             <div>
                 <label class="block text-sm text-muted mb-1">Reference No.</label>
-                <input name="reference_no" value="{{ patient.reference_no if patient else '' }}"
+                <input name="reference_no" value="{{ (patient and patient.reference_no) or '' }}"
                        class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
             </div>
         </div>
@@ -170,7 +170,7 @@
 
     <div>
         <label class="block text-sm text-muted mb-1">Notes</label>
-        <textarea name="note" rows="3" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ patient.note if patient else '' }}</textarea>
+        <textarea name="note" rows="3" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ (patient and patient.note) or '' }}</textarea>
     </div>
 
     <div class="flex items-center gap-3 pt-2">

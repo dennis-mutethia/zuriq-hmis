@@ -113,3 +113,70 @@ class Visit(db.Model):
 
     patient = db.relationship("Patient")
     clinic = db.relationship("Clinic")
+
+
+class Service(db.Model):
+    __tablename__ = "services"
+    service_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    department_id = db.Column(db.Integer)
+    cash_rate = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    nhif_rate = db.Column(db.Numeric(14, 2))
+    aar_rate = db.Column(db.Numeric(14, 2))
+    kcb_rate = db.Column(db.Numeric(14, 2))
+    eduafya_rate = db.Column(db.Numeric(14, 2))
+    liason_rate = db.Column(db.Numeric(14, 2))
+    national_scheme_rate = db.Column(db.Numeric(14, 2))
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+
+class MedicalBill(db.Model):
+    __tablename__ = "medical_bills"
+
+    medical_bill_id = db.Column(db.Integer, primary_key=True)
+    medical_bill_no = db.Column(db.Text, unique=True)   # system-generated: ZH-MB-{medical_bill_id}
+    visit_id = db.Column(db.Integer, db.ForeignKey("visits.visit_id"))
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"))
+    is_patient = db.Column(db.Boolean, nullable=False, default=True)
+    customer_name = db.Column(db.Text)
+    telephone_no = db.Column(db.Text)
+    id_number = db.Column(db.Text)
+    group_account_id = db.Column(db.Integer, db.ForeignKey("group_accounts.group_account_id"))
+    total_bill_amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    sales_discount_amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    write_off_amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    cover_amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    advance_payment = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    total_amount_paid = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    deposit_balance = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    deposit_offset = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    is_processed = db.Column(db.Boolean, nullable=False, default=False)
+    date_time_created = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    date_time_processed = db.Column(db.DateTime(timezone=True))
+    processed_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+
+    visit = db.relationship("Visit")
+    patient = db.relationship("Patient")
+    group_account = db.relationship("GroupAccount")
+    items = db.relationship("BillItem", backref="bill", cascade="all, delete-orphan")
+
+    @property
+    def balance_due(self):
+        return (self.total_bill_amount or 0) - (self.total_amount_paid or 0) - (self.cover_amount or 0)
+
+
+class BillItem(db.Model):
+    __tablename__ = "bill_items"
+
+    bill_item_id = db.Column(db.Integer, primary_key=True)
+    medical_bill_id = db.Column(db.Integer, db.ForeignKey("medical_bills.medical_bill_id"), nullable=False)
+    service_id = db.Column(db.Integer, db.ForeignKey("services.service_id"))
+    name = db.Column(db.Text, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    rate = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    percentage_discount = db.Column(db.Numeric(5, 2), nullable=False, default=0)
+    discounted_amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    has_been_paid_for = db.Column(db.Boolean, nullable=False, default=False)
+
+    service = db.relationship("Service")

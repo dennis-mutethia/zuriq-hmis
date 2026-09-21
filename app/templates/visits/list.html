@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Visits — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Visits{% endblock %}
 {% block content %}
 
 <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-semibold text-slate-900">OPD Visits</h1>
+    <h1 class="text-2xl font-semibold text-ink">OPD Visits</h1>
     <a href="{{ url_for('visits.find_patient') }}"
        class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
         + Record Visit
@@ -12,12 +13,12 @@
 
 <form method="get" class="mb-6">
     <input type="text" name="q" value="{{ q }}" placeholder="Search by patient name or OP number…"
-           class="w-full sm:w-96 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+           class="w-full sm:w-96 border border-ink/15 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
 </form>
 
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+<div class="bg-white rounded-xl shadow-sm border border-ink/10 overflow-hidden">
     <table class="w-full text-sm text-left">
-        <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+        <thead class="bg-canvas text-muted uppercase text-xs">
             <tr>
                 <th class="px-4 py-3">Date/Time</th>
                 <th class="px-4 py-3">Patient</th>
@@ -25,27 +26,36 @@
                 <th class="px-4 py-3">Clinic</th>
                 <th class="px-4 py-3">Doctor</th>
                 <th class="px-4 py-3">Type</th>
+                <th class="px-4 py-3"></th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
+        <tbody class="divide-y divide-ink/5">
             {% for v in visits %}
-            <tr class="hover:bg-slate-50">
-                <td class="px-4 py-3 text-slate-500">{{ v.visit_datetime.strftime("%d %b %Y %H:%M") if v.visit_datetime else "—" }}</td>
+            <tr class="hover:bg-canvas">
+                <td class="px-4 py-3 text-muted">{{ v.visit_datetime.strftime("%d %b %Y %H:%M") if v.visit_datetime else "—" }}</td>
                 <td class="px-4 py-3 font-medium">{{ v.patient.full_name }}</td>
-                <td class="px-4 py-3">{{ v.patient.out_patient_no or "—" }}</td>
+                <td class="px-4 py-3 font-mono text-muted">{{ v.patient.out_patient_no or "—" }}</td>
                 <td class="px-4 py-3">{{ v.clinic.name if v.clinic else "—" }}</td>
                 <td class="px-4 py-3">{{ v.doctor or "—" }}</td>
                 <td class="px-4 py-3">
                     {% if v.is_consultant %}
                     <span class="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full">Consultation</span>
                     {% else %}
-                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">OPD</span>
+                    <span class="text-xs bg-canvas text-muted px-2 py-1 rounded-full">OPD</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right">
+                    {% if v.is_processed %}
+                    <span class="text-muted/60 text-xs">Billed</span>
+                    {% else %}
+                    <a href="{{ url_for('billing.new_bill_for_visit', visit_id=v.visit_id) }}"
+                       class="text-brand-600 hover:text-brand-700 font-medium">Bill</a>
                     {% endif %}
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" class="px-4 py-8 text-center text-slate-400">No visits recorded yet.</td>
+                <td colspan="7" class="px-4 py-8 text-center text-muted/60">No visits recorded yet.</td>
             </tr>
             {% endfor %}
         </tbody>

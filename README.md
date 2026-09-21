@@ -82,9 +82,32 @@ list with a "Register Patient" button.
   under-5 vs adult distinction, used in Kenya MOH reporting forms)
 - Visit list with search by patient name or OP number
 
-If you're setting this up fresh, run `schema.sql` (it now includes both
-modules). If you already ran the Patient-only version, run
-`migration_add_visits.sql` to add just the new tables.
+**Billing** (`/billing`)
+- Create a bill directly from a visit (service catalog with quantities,
+  auto-calculated total)
+- Bill number auto-generated as `ZH-MB-{medical_bill_id}` (same pattern as
+  OP/IP numbers)
+- Record payments against a bill; it's marked fully paid once the balance
+  hits zero
+- Simple service catalog admin (`/billing/services`) — add services with a
+  cash rate; insurance/scheme rates exist in the schema but aren't in the
+  form yet (see "deferred" below)
+- Visit list shows a "Bill" shortcut once a visit hasn't been billed yet
+
+If you're setting this up fresh, run `schema.sql` (it now includes all three
+modules). If you already have Patients + Visits set up, run
+`migrations/migration_add_billing.sql` to add just the billing tables.
+
+## What's intentionally deferred (Billing)
+
+- **Insurance/corporate billing** — `cover_amount`, and per-scheme rates on
+  `services` (NHIF, AAR, KCB, etc.) exist in the schema but nothing in the
+  app applies them yet; every bill today is treated as cash-pay.
+- **Discounts and write-offs** — columns exist (`sales_discount_amount`,
+  `write_off_amount`) but there's no UI for applying them.
+- **Walk-in (non-patient) cash sales** — `medical_bills.is_patient` supports
+  this, but the only flow built right now starts from a patient's visit.
+- **Receipts** — no printable/PDF receipt yet, just the on-screen bill view.
 
 ## What's intentionally deferred
 
@@ -100,6 +123,6 @@ modules). If you already ran the Patient-only version, run
 
 ## Suggested next module
 
-Billing (medical bills off a visit) or Admissions (which is also where
-`in_patient_no` finally gets assigned) — both hang directly off the
-`visits` table now in place.
+Admissions — this is where `in_patient_no` finally gets assigned (via
+`assign_inpatient_number()`, already sitting in the database waiting to be
+called), and it's the other major branch off a visit besides billing.

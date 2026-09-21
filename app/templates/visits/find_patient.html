@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Find Patient — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Visits{% endblock %}
 {% block content %}
 
-<h1 class="text-2xl font-semibold text-slate-900 mb-6">Find Patient for Visit</h1>
+<h1 class="text-2xl font-semibold text-ink mb-6">Find Patient for Visit</h1>
 
 <form method="get" class="mb-6">
     <input type="text" name="q" value="{{ q }}" placeholder="Search by name or OP number…"
-           class="w-full sm:w-96 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+           class="w-full sm:w-96 border border-ink/15 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
 </form>
 
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+<div class="bg-white rounded-xl shadow-sm border border-ink/10 overflow-hidden">
     <table class="w-full text-sm text-left">
-        <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+        <thead class="bg-canvas text-muted uppercase text-xs">
             <tr>
                 <th class="px-4 py-3">OP No.</th>
                 <th class="px-4 py-3">Name</th>
@@ -19,10 +20,10 @@
                 <th class="px-4 py-3"></th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
+        <tbody class="divide-y divide-ink/5">
             {% for p in patients %}
-            <tr class="hover:bg-slate-50">
-                <td class="px-4 py-3 font-medium">{{ p.out_patient_no or "—" }}</td>
+            <tr class="hover:bg-canvas">
+                <td class="px-4 py-3 font-medium font-mono">{{ p.out_patient_no or "—" }}</td>
                 <td class="px-4 py-3">{{ p.full_name }}</td>
                 <td class="px-4 py-3">{{ p.sex }}</td>
                 <td class="px-4 py-3 text-right">
@@ -32,7 +33,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="4" class="px-4 py-8 text-center text-slate-400">
+                <td colspan="4" class="px-4 py-8 text-center text-muted/60">
                     {% if q %}No matching patients.{% else %}Search for a patient to start a visit.{% endif %}
                 </td>
             </tr>

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Bills — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Billing{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Medical Bills</h1>
+    <a href="{{ url_for('billing.list_services') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
+        Manage Services
+    </a>
+</div>
+
+<form method="get" class="mb-6">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by bill number or customer name…"
+           class="w-full sm:w-96 border border-ink/15 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+</form>
+
+<div class="bg-white rounded-xl shadow-sm border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Bill No.</th>
+                <th class="px-4 py-3">Customer</th>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3 text-right">Total</th>
+                <th class="px-4 py-3 text-right">Paid</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for b in bills %}
+            <tr class="hover:bg-canvas">
+                <td class="px-4 py-3 font-medium font-mono">{{ b.medical_bill_no }}</td>
+                <td class="px-4 py-3">{{ b.customer_name }}</td>
+                <td class="px-4 py-3 text-muted">{{ b.date_time_created.strftime("%d %b %Y") }}</td>
+                <td class="px-4 py-3 text-right">KES {{ "%.2f"|format(b.total_bill_amount) }}</td>
+                <td class="px-4 py-3 text-right">KES {{ "%.2f"|format(b.total_amount_paid) }}</td>
+                <td class="px-4 py-3">
+                    {% if b.is_processed %}
+                    <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">Paid</span>
+                    {% else %}
+                    <span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full">Pending</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('billing.view_bill', medical_bill_id=b.medical_bill_id) }}"
+                       class="text-brand-600 hover:text-brand-700 font-medium">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="px-4 py-8 text-center text-muted/60">No bills yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

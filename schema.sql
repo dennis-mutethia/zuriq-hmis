@@ -166,7 +166,81 @@ CREATE TABLE visits (
 CREATE INDEX idx_visits_patient_id ON visits (patient_id);
 CREATE INDEX idx_visits_visit_datetime ON visits (visit_datetime);
 
+-- ── Module: Billing ──────────────────────────────────────────────────────
+-- Source: tblservices, tblmedicalbills, tblsaleitems (via BaseClasses)
+
+CREATE TABLE services (
+    service_id         SERIAL PRIMARY KEY,
+    name               TEXT NOT NULL,
+    department_id      INTEGER,          -- FK deferred until Departments module exists
+    cash_rate          NUMERIC(14,2) NOT NULL DEFAULT 0,
+    nhif_rate          NUMERIC(14,2),     -- original: NHIFFFS
+    aar_rate           NUMERIC(14,2),     -- original: AAR
+    kcb_rate           NUMERIC(14,2),     -- original: KCB
+    eduafya_rate       NUMERIC(14,2),
+    liason_rate        NUMERIC(14,2),
+    national_scheme_rate NUMERIC(14,2),
+    is_active          BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE medical_bills (
+    medical_bill_id       SERIAL PRIMARY KEY,
+    medical_bill_no       TEXT UNIQUE,       -- system-generated: ZH-MB-{medical_bill_id}
+    visit_id              INTEGER REFERENCES visits(visit_id),
+    patient_id            INTEGER REFERENCES patients(patient_id),
+    is_patient            BOOLEAN NOT NULL DEFAULT TRUE,  -- false = walk-in cash sale, no patient record
+    customer_name         TEXT,             -- snapshot at billing time (walk-in sales have no patient row)
+    telephone_no          TEXT,
+    id_number             TEXT,
+    group_account_id      INTEGER REFERENCES group_accounts(group_account_id),
+    total_bill_amount     NUMERIC(14,2) NOT NULL DEFAULT 0,
+    sales_discount_amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+    write_off_amount      NUMERIC(14,2) NOT NULL DEFAULT 0,
+    cover_amount          NUMERIC(14,2) NOT NULL DEFAULT 0,   -- portion billed to insurance/group account
+    advance_payment       NUMERIC(14,2) NOT NULL DEFAULT 0,
+    total_amount_paid     NUMERIC(14,2) NOT NULL DEFAULT 0,
+    deposit_balance       NUMERIC(14,2) NOT NULL DEFAULT 0,
+    deposit_offset        NUMERIC(14,2) NOT NULL DEFAULT 0,
+    is_processed          BOOLEAN NOT NULL DEFAULT FALSE,   -- true once payment/finalization is done
+    date_time_created     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_time_processed   TIMESTAMPTZ,
+    processed_by          INTEGER REFERENCES system_users(system_user_id)
+);
+
+CREATE TABLE bill_items (
+    bill_item_id        SERIAL PRIMARY KEY,
+    medical_bill_id      INTEGER NOT NULL REFERENCES medical_bills(medical_bill_id) ON DELETE CASCADE,
+    service_id           INTEGER REFERENCES services(service_id),
+    name                 TEXT NOT NULL,     -- snapshot of service name at time of billing
+    quantity              INTEGER NOT NULL DEFAULT 1,
+    rate                  NUMERIC(14,2) NOT NULL DEFAULT 0,
+    percentage_discount   NUMERIC(5,2) NOT NULL DEFAULT 0,
+    discounted_amount     NUMERIC(14,2) NOT NULL DEFAULT 0,
+    amount                NUMERIC(14,2) NOT NULL DEFAULT 0,  -- (rate * quantity) - discounted_amount
+    has_been_paid_for     BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE INDEX idx_medical_bills_visit_id ON medical_bills (visit_id);
+CREATE INDEX idx_medical_bills_patient_id ON medical_bills (patient_id);
+CREATE INDEX idx_bill_items_medical_bill_id ON bill_items (medical_bill_id);
+
+-- Auto-generate the bill number, same pattern as OP numbers.
+CREATE OR REPLACE FUNCTION assign_medical_bill_number()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE medical_bills
+    SET medical_bill_no = COALESCE(medical_bill_no, 'ZH-MB-' || NEW.medical_bill_id)
+    WHERE medical_bill_id = NEW.medical_bill_id;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_assign_medical_bill_number
+AFTER INSERT ON medical_bills
+FOR EACH ROW
+EXECUTE FUNCTION assign_medical_bill_number();
+
 -- ── Optional starter data ───────────────────────────────────────────────
 -- Uncomment and adjust to your context before running, or add via the app later.
 
-INSERT INTO id_types (id_type) VALUES ('National ID'), ('Passport'), ('Birth Certificate');
+-- INSERT INTO id_types (id_type) VALUES ('National ID'), ('Passport'), ('Birth Certificate');

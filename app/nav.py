@@ -1,0 +1,30 @@
+from flask import request, url_for
+from markupsafe import Markup
+
+# Minimal line-icon set (20x20, stroke-based) so the sidebar has no icon
+# library dependency. Keys match the third argument passed to nav_link().
+_ICONS = {
+    "grid": '<path stroke-linecap="round" stroke-linejoin="round" d="M4 4h5v5H4V4zm7 0h5v5h-5V4zM4 11h5v5H4v-5zm7 0h5v5h-5v-5z"/>',
+    "user": '<path stroke-linecap="round" stroke-linejoin="round" d="M10 10a3 3 0 100-6 3 3 0 000 6zm-6 7c0-3 2.5-5 6-5s6 2 6 5"/>',
+    "calendar": '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5h12v11H4V5zm0 3h12M7 3v3m6-3v3"/>',
+    "receipt": '<path stroke-linecap="round" stroke-linejoin="round" d="M5 3h10v14l-2-1.3L11 17l-2-1.3L7 17l-2-1.3V3zM7 7h6M7 10h6"/>',
+    "tag": '<path stroke-linecap="round" stroke-linejoin="round" d="M11 3H5a2 2 0 00-2 2v6l8 8 6-6-8-8z"/><circle cx="7" cy="7" r="1"/>',
+}
+
+
+def nav_link(endpoint, label, icon):
+    is_active = request.blueprint == endpoint.split(".")[0]
+    base_classes = "nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+    state_classes = (
+        "bg-brand-50 text-brand-700"
+        if is_active
+        else "text-muted hover:bg-canvas hover:text-ink"
+    )
+    icon_svg = (
+        f'<svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" '
+        f'stroke="currentColor" stroke-width="1.75">{_ICONS.get(icon, "")}</svg>'
+    )
+    return Markup(
+        f'<a href="{url_for(endpoint)}" class="{base_classes} {state_classes}">'
+        f'{icon_svg}<span class="nav-label whitespace-nowrap">{label}</span></a>'
+    )

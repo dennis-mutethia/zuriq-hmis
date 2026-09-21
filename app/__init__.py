@@ -11,10 +11,19 @@ def create_app():
 
     db.init_app(app)
 
+    from app.nav import nav_link
+    app.jinja_env.globals["nav_link"] = nav_link
+
+    from app.routes.dashboard import dashboard_bp
+    app.register_blueprint(dashboard_bp)
+
     from app.routes.patients import patients_bp
     app.register_blueprint(patients_bp)
 
     from app.routes.visits import visits_bp
     app.register_blueprint(visits_bp)
+
+    from app.routes.billing import billing_bp
+    app.register_blueprint(billing_bp)
 
     return app

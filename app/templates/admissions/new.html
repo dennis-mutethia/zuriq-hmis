@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Admit Patient — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Admissions{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Admit Patient</h1>
+
+<div class="bg-white rounded-xl border border-ink/10 p-4 mb-6">
+    <div class="font-semibold text-ink">{{ patient.full_name }}</div>
+    <div class="text-sm text-muted">OP: <span class="font-mono">{{ patient.out_patient_no }}</span> · Visit: {{ visit.visit_datetime.strftime("%d %b %Y %H:%M") }}</div>
+</div>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 space-y-4 max-w-lg">
+    <div>
+        <label class="block text-sm text-muted mb-1">Bed</label>
+        <select name="bed_id" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <option value="">— No bed yet (assign later) —</option>
+            {% for b in available_beds %}
+            <option value="{{ b.bed_id }}">{{ b.ward.name }} · Bed {{ b.bed_no }}</option>
+            {% endfor %}
+        </select>
+        {% if not available_beds %}
+        <p class="text-xs text-warn mt-1">No vacant beds found — you can still admit and assign a bed later.</p>
+        {% endif %}
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Admitting Doctor</label>
+        <input name="admitting_doctor" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Received By (Nurse)</label>
+        <input name="received_by_nurse" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Admit Patient
+        </button>
+        <a href="{{ url_for('visits.list_visits') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

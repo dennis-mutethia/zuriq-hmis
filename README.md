@@ -121,8 +121,35 @@ modules). If you already have Patients + Visits set up, run
 - **Blacklist / duplicate patient detection** — the original app has a
   `tblblacklistpatients` table and dedicate flows for this; not wired in yet.
 
+**Admissions** (`/admissions`)
+- Admit a patient directly from a visit — pick a vacant bed (optional),
+  admitting doctor, receiving nurse
+- Assigns `in_patient_no` automatically the moment an admission is created
+  (via `assign_inpatient_number()`, called by a DB trigger — this is the
+  one and only place that happens)
+- Discharge marks the admission ended and frees the bed
+- Simple Wards & Beds admin (`/admissions/wards`) — add wards, add beds per
+  ward, see live vacant/occupied status
+- Bed assignment is tracked as a history (`admission_ward`), not a single
+  column, since a patient can move beds/wards during one admission — this
+  matters if you build ward-transfer later, but isn't exposed in the UI yet
+- Visit list shows an "Admit" shortcut once a visit hasn't been admitted
+
+Run `migrations/migration_add_admissions.sql` on an existing database (it
+depends on `assign_inpatient_number()` already existing — run
+`migration_op_ip_numbers.sql` first if you haven't). Fresh installs: just
+run `schema.sql`, which now includes all four modules.
+
+## What's intentionally deferred (Admissions)
+
+- **Ward transfers** — the schema supports a patient moving beds mid-admission
+  (`admission_ward` is a history, not a single column) but there's no UI for
+  it yet; only the initial bed assignment at admission time is wired in.
+- **Inpatient billing** — admissions don't yet generate their own bills
+  (deposits, daily bed charges); the existing Billing module only bills OPD
+  visits directly.
+
 ## Suggested next module
 
-Admissions — this is where `in_patient_no` finally gets assigned (via
-`assign_inpatient_number()`, already sitting in the database waiting to be
-called), and it's the other major branch off a visit besides billing.
+Pharmacy/Dispensing or Lab — both are common next steps off a visit, and
+neither depends on anything not already in place.

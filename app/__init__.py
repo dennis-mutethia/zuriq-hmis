@@ -26,4 +26,7 @@ def create_app():
     from app.routes.billing import billing_bp
     app.register_blueprint(billing_bp)
 
+    from app.routes.admissions import admissions_bp
+    app.register_blueprint(admissions_bp)
+
     return app

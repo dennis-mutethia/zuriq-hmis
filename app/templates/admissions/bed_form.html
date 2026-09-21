@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Add Bed — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Admissions{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-1">Add Bed</h1>
+<p class="text-muted mb-6">Ward: {{ ward.name }}</p>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-md space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Bed Number *</label>
+        <input name="bed_no" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm" placeholder="e.g. 04">
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Bed
+        </button>
+        <a href="{{ url_for('admissions.list_wards') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

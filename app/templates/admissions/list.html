@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Admissions — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Admissions{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Admissions</h1>
+    <a href="{{ url_for('admissions.list_wards') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
+        Manage Wards & Beds
+    </a>
+</div>
+
+<div class="flex gap-2 mb-6">
+    <a href="{{ url_for('admissions.list_admissions', status='current') }}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium {{ 'bg-brand-50 text-brand-700' if status == 'current' else 'text-muted hover:bg-canvas' }}">
+        Currently Admitted
+    </a>
+    <a href="{{ url_for('admissions.list_admissions', status='discharged') }}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium {{ 'bg-brand-50 text-brand-700' if status == 'discharged' else 'text-muted hover:bg-canvas' }}">
+        Discharged
+    </a>
+    <a href="{{ url_for('admissions.list_admissions', status='all') }}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium {{ 'bg-brand-50 text-brand-700' if status == 'all' else 'text-muted hover:bg-canvas' }}">
+        All
+    </a>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">IP No.</th>
+                <th class="px-4 py-3">Patient</th>
+                <th class="px-4 py-3">Ward / Bed</th>
+                <th class="px-4 py-3">Admitted</th>
+                <th class="px-4 py-3">Doctor</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for a in admissions %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-mono text-ink">{{ a.patient.in_patient_no or "—" }}</td>
+                <td class="px-4 py-3 font-medium">{{ a.patient.full_name }}</td>
+                <td class="px-4 py-3">
+                    {% if a.current_bed_assignment %}
+                    {{ a.current_bed_assignment.ward.name }} · Bed {{ a.current_bed_assignment.bed.bed_no }}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="px-4 py-3 text-muted">{{ a.admission_datetime.strftime("%d %b %Y %H:%M") }}</td>
+                <td class="px-4 py-3">{{ a.admitting_doctor or "—" }}</td>
+                <td class="px-4 py-3 text-right">
+                    {% if a.is_in_admission %}
+                    <form method="post" action="{{ url_for('admissions.discharge', admission_id=a.admission_id) }}"
+                          onsubmit="return confirm('Discharge {{ a.patient.full_name }}?');" class="inline-flex items-center gap-2">
+                        <input name="discharging_doctor" placeholder="Discharging doctor"
+                               class="border border-ink/15 rounded-lg px-2 py-1 text-xs w-32">
+                        <button type="submit" class="text-danger hover:text-danger/80 font-medium text-xs">Discharge</button>
+                    </form>
+                    {% else %}
+                    <span class="text-xs text-muted">Discharged {{ a.discharge_datetime.strftime("%d %b") if a.discharge_datetime else "" }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="px-4 py-8 text-center text-muted/60">No admissions in this view.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -51,6 +51,10 @@
                     <a href="{{ url_for('billing.new_bill_for_visit', visit_id=v.visit_id) }}"
                        class="text-brand-600 hover:text-brand-700 font-medium">Bill</a>
                     {% endif %}
+                    {% if not v.is_admitted %}
+                    <a href="{{ url_for('admissions.new_admission', visit_id=v.visit_id) }}"
+                       class="text-ink/70 hover:text-ink font-medium ml-3">Admit</a>
+                    {% endif %}
                 </td>
             </tr>
             {% else %}

@@ -240,6 +240,65 @@ AFTER INSERT ON medical_bills
 FOR EACH ROW
 EXECUTE FUNCTION assign_medical_bill_number();
 
+-- ── Module: Admissions ───────────────────────────────────────────────────
+-- Source: tblwards, tblbeds, tbladmissions, tbladmissionward
+
+CREATE TABLE wards (
+    ward_id     SERIAL PRIMARY KEY,
+    name        TEXT NOT NULL
+);
+
+CREATE TABLE beds (
+    bed_id      SERIAL PRIMARY KEY,
+    ward_id     INTEGER NOT NULL REFERENCES wards(ward_id),
+    bed_no      TEXT NOT NULL,
+    bed_status  TEXT NOT NULL DEFAULT 'Vacant' CHECK (bed_status IN ('Vacant', 'Occupied')),
+    UNIQUE (ward_id, bed_no)
+);
+
+CREATE TABLE admissions (
+    admission_id          SERIAL PRIMARY KEY,
+    visit_id               INTEGER REFERENCES visits(visit_id),
+    patient_id             INTEGER NOT NULL REFERENCES patients(patient_id),
+    admission_datetime     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    discharge_datetime     TIMESTAMPTZ,
+    is_in_admission        BOOLEAN NOT NULL DEFAULT TRUE,
+    admitted_by            INTEGER REFERENCES system_users(system_user_id),
+    admitting_doctor       TEXT,
+    discharging_doctor     TEXT,
+    received_by_nurse      TEXT
+);
+
+-- Bed assignment history — a patient can move beds/wards during one
+-- admission, so this is a log, not a single column on admissions.
+CREATE TABLE admission_ward (
+    admission_ward_id  SERIAL PRIMARY KEY,
+    admission_id        INTEGER NOT NULL REFERENCES admissions(admission_id),
+    ward_id              INTEGER NOT NULL REFERENCES wards(ward_id),
+    bed_id               INTEGER NOT NULL REFERENCES beds(bed_id),
+    is_current_bed       BOOLEAN NOT NULL DEFAULT TRUE,
+    assigned_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_admissions_patient_id ON admissions (patient_id);
+CREATE INDEX idx_admissions_is_in_admission ON admissions (is_in_admission);
+CREATE INDEX idx_admission_ward_admission_id ON admission_ward (admission_id);
+
+-- Assigns in_patient_no the moment an admission is created — this is the
+-- only place that happens (see assign_inpatient_number() above).
+CREATE OR REPLACE FUNCTION on_admission_created()
+RETURNS TRIGGER AS $$
+BEGIN
+    PERFORM assign_inpatient_number(NEW.patient_id);
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_on_admission_created
+AFTER INSERT ON admissions
+FOR EACH ROW
+EXECUTE FUNCTION on_admission_created();
+
 -- ── Optional starter data ───────────────────────────────────────────────
 -- Uncomment and adjust to your context before running, or add via the app later.
 

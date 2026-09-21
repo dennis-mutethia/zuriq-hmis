@@ -180,3 +180,59 @@ class BillItem(db.Model):
     has_been_paid_for = db.Column(db.Boolean, nullable=False, default=False)
 
     service = db.relationship("Service")
+
+
+class Ward(db.Model):
+    __tablename__ = "wards"
+    ward_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+
+
+class Bed(db.Model):
+    __tablename__ = "beds"
+    bed_id = db.Column(db.Integer, primary_key=True)
+    ward_id = db.Column(db.Integer, db.ForeignKey("wards.ward_id"), nullable=False)
+    bed_no = db.Column(db.Text, nullable=False)
+    bed_status = db.Column(db.Text, nullable=False, default="Vacant")
+
+    ward = db.relationship("Ward", backref="beds")
+
+
+class Admission(db.Model):
+    __tablename__ = "admissions"
+
+    admission_id = db.Column(db.Integer, primary_key=True)
+    visit_id = db.Column(db.Integer, db.ForeignKey("visits.visit_id"))
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"), nullable=False)
+    admission_datetime = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    discharge_datetime = db.Column(db.DateTime(timezone=True))
+    is_in_admission = db.Column(db.Boolean, nullable=False, default=True)
+    admitted_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    admitting_doctor = db.Column(db.Text)
+    discharging_doctor = db.Column(db.Text)
+    received_by_nurse = db.Column(db.Text)
+
+    patient = db.relationship("Patient")
+    visit = db.relationship("Visit")
+    bed_assignments = db.relationship("AdmissionWard", backref="admission", order_by="AdmissionWard.assigned_at")
+
+    @property
+    def current_bed_assignment(self):
+        for a in reversed(self.bed_assignments):
+            if a.is_current_bed:
+                return a
+        return None
+
+
+class AdmissionWard(db.Model):
+    __tablename__ = "admission_ward"
+
+    admission_ward_id = db.Column(db.Integer, primary_key=True)
+    admission_id = db.Column(db.Integer, db.ForeignKey("admissions.admission_id"), nullable=False)
+    ward_id = db.Column(db.Integer, db.ForeignKey("wards.ward_id"), nullable=False)
+    bed_id = db.Column(db.Integer, db.ForeignKey("beds.bed_id"), nullable=False)
+    is_current_bed = db.Column(db.Boolean, nullable=False, default=True)
+    assigned_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    ward = db.relationship("Ward")
+    bed = db.relationship("Bed")

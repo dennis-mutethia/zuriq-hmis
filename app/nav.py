@@ -9,6 +9,7 @@ _ICONS = {
     "calendar": '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5h12v11H4V5zm0 3h12M7 3v3m6-3v3"/>',
     "receipt": '<path stroke-linecap="round" stroke-linejoin="round" d="M5 3h10v14l-2-1.3L11 17l-2-1.3L7 17l-2-1.3V3zM7 7h6M7 10h6"/>',
     "tag": '<path stroke-linecap="round" stroke-linejoin="round" d="M11 3H5a2 2 0 00-2 2v6l8 8 6-6-8-8z"/><circle cx="7" cy="7" r="1"/>',
+    "bed": '<path stroke-linecap="round" stroke-linejoin="round" d="M3 16v-6a2 2 0 012-2h10a2 2 0 012 2v6M3 16v1M17 16v1M3 12h14M6 9V6"/>',
 }
 
 

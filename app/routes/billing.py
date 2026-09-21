@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from app import db
 from app.models import MedicalBill, BillItem, Service, Visit, Patient
 
@@ -8,6 +9,7 @@ billing_bp = Blueprint("billing", __name__, url_prefix="/billing")
 
 
 @billing_bp.route("/")
+@login_required
 def list_bills():
     q = request.args.get("q", "").strip()
     query = MedicalBill.query
@@ -24,6 +26,7 @@ def list_bills():
 
 
 @billing_bp.route("/visit/<int:visit_id>/new", methods=["GET", "POST"])
+@login_required
 def new_bill_for_visit(visit_id):
     visit = Visit.query.get_or_404(visit_id)
     patient = visit.patient
@@ -82,12 +85,14 @@ def new_bill_for_visit(visit_id):
 
 
 @billing_bp.route("/<int:medical_bill_id>")
+@login_required
 def view_bill(medical_bill_id):
     bill = MedicalBill.query.get_or_404(medical_bill_id)
     return render_template("billing/view.html", bill=bill)
 
 
 @billing_bp.route("/<int:medical_bill_id>/pay", methods=["POST"])
+@login_required
 def record_payment(medical_bill_id):
     bill = MedicalBill.query.get_or_404(medical_bill_id)
     amount = Decimal(request.form.get("amount", "0") or "0")
@@ -107,12 +112,14 @@ def record_payment(medical_bill_id):
 # ── Service catalog (simple admin CRUD) ─────────────────────────────────
 
 @billing_bp.route("/services")
+@login_required
 def list_services():
     services = Service.query.order_by(Service.name).all()
     return render_template("billing/services.html", services=services)
 
 
 @billing_bp.route("/services/new", methods=["GET", "POST"])
+@login_required
 def new_service():
     if request.method == "POST":
         service = Service(

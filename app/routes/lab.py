@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from app import db
 from app.models import LabRequest, LabRequestItem, Test, Visit
 
@@ -7,6 +8,7 @@ lab_bp = Blueprint("lab", __name__, url_prefix="/lab")
 
 
 @lab_bp.route("/")
+@login_required
 def list_requests():
     status = request.args.get("status", "pending")
     query = LabRequest.query
@@ -19,6 +21,7 @@ def list_requests():
 
 
 @lab_bp.route("/visit/<int:visit_id>/new", methods=["GET", "POST"])
+@login_required
 def new_request(visit_id):
     visit = Visit.query.get_or_404(visit_id)
     patient = visit.patient
@@ -59,6 +62,7 @@ def new_request(visit_id):
 
 
 @lab_bp.route("/<int:lab_request_id>", methods=["GET", "POST"])
+@login_required
 def view_request(lab_request_id):
     lab_request = LabRequest.query.get_or_404(lab_request_id)
 
@@ -80,12 +84,14 @@ def view_request(lab_request_id):
 # ── Test catalog (simple admin) ─────────────────────────────────────────
 
 @lab_bp.route("/tests")
+@login_required
 def list_tests():
     tests = Test.query.order_by(Test.name).all()
     return render_template("lab/tests.html", tests=tests)
 
 
 @lab_bp.route("/tests/new", methods=["GET", "POST"])
+@login_required
 def new_test():
     if request.method == "POST":
         test = Test(

@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from app import db
 from app.models import Patient, IdType, Nationality, GroupAccount
 
@@ -6,6 +7,7 @@ patients_bp = Blueprint("patients", __name__, url_prefix="/patients")
 
 
 @patients_bp.route("/")
+@login_required
 def list_patients():
     q = request.args.get("q", "").strip()
     query = Patient.query
@@ -24,6 +26,7 @@ def list_patients():
 
 
 @patients_bp.route("/new", methods=["GET", "POST"])
+@login_required
 def new_patient():
     if request.method == "POST":
         patient = Patient(
@@ -68,6 +71,7 @@ def new_patient():
 
 
 @patients_bp.route("/<int:patient_id>/edit", methods=["GET", "POST"])
+@login_required
 def edit_patient(patient_id):
     patient = Patient.query.get_or_404(patient_id)
 
@@ -100,6 +104,7 @@ def edit_patient(patient_id):
 
 
 @patients_bp.route("/<int:patient_id>/delete", methods=["POST"])
+@login_required
 def delete_patient(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     db.session.delete(patient)

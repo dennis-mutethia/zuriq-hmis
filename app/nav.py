@@ -12,6 +12,7 @@ _ICONS = {
     "bed": '<path stroke-linecap="round" stroke-linejoin="round" d="M3 16v-6a2 2 0 012-2h10a2 2 0 012 2v6M3 16v1M17 16v1M3 12h14M6 9V6"/>',
     "pill": '<path stroke-linecap="round" stroke-linejoin="round" d="M6.5 13.5l7-7a3.5 3.5 0 114.95 4.95l-7 7a3.5 3.5 0 01-4.95-4.95zM9 11l4-4"/>',
     "flask": '<path stroke-linecap="round" stroke-linejoin="round" d="M8 3h4M8.5 3v5L5 15a1.5 1.5 0 001.3 2.2h7.4A1.5 1.5 0 0015 15l-3.5-7V3"/>',
+    "users": '<path stroke-linecap="round" stroke-linejoin="round" d="M13 17c0-2.2-1.8-4-4-4s-4 1.8-4 4M9 10a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm5.5 7c0-1.7-1.3-3.2-3-3.7M13.5 9.7A2.5 2.5 0 1012 5.2"/>',
 }
 
 

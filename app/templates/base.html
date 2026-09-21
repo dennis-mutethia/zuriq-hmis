@@ -85,9 +85,26 @@
                 <div class="nav-section-label px-3 text-xs font-medium uppercase tracking-wide text-muted/70 mt-4 mb-1">Finance</div>
                 {{ nav_link('billing.list_bills', 'Billing', 'receipt') }}
                 {{ nav_link('billing.list_services', 'Services', 'tag') }}
+
+                <div class="nav-section-label px-3 text-xs font-medium uppercase tracking-wide text-muted/70 mt-4 mb-1">Admin</div>
+                {{ nav_link('auth.list_users', 'Users', 'users') }}
             </nav>
 
-            <div class="p-3 border-t border-ink/10">
+            <div class="p-3 border-t border-ink/10 space-y-1">
+                {% if current_user.is_authenticated %}
+                <div class="nav-item flex items-center gap-3 px-3 py-2 text-sm text-muted">
+                    <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-semibold shrink-0">
+                        {{ current_user.username[:1]|upper }}
+                    </div>
+                    <span class="nav-label whitespace-nowrap truncate">{{ current_user.username }}</span>
+                </div>
+                <form method="post" action="{{ url_for('auth.logout') }}">
+                    <button type="submit" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-canvas hover:text-ink text-sm transition-colors">
+                        <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M8 4H4v12h4M13 14l4-4-4-4M17 10H7"/></svg>
+                        <span class="nav-label whitespace-nowrap">Log out</span>
+                    </button>
+                </form>
+                {% endif %}
                 <button onclick="toggleSidebar()" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-canvas hover:text-ink text-sm transition-colors">
                     <svg id="collapse-icon" class="w-5 h-5 shrink-0 transition-transform" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4L6.5 10l6 6"/></svg>
                     <span class="nav-label whitespace-nowrap">Collapse</span>

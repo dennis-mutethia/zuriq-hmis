@@ -50,6 +50,8 @@ CREATE TABLE group_accounts (
 CREATE TABLE system_users (
     system_user_id  SERIAL PRIMARY KEY,
     username         TEXT NOT NULL UNIQUE,
+    password_hash    TEXT,             -- set by the app (werkzeug hash), never plaintext
+    is_active        BOOLEAN NOT NULL DEFAULT TRUE,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

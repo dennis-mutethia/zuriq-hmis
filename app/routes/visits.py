@@ -1,5 +1,6 @@
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from app import db
 from app.models import Visit, Patient, Clinic
 
@@ -22,6 +23,7 @@ def _calc_age(dob):
 
 
 @visits_bp.route("/")
+@login_required
 def list_visits():
     q = request.args.get("q", "").strip()
     query = Visit.query.join(Patient)
@@ -39,6 +41,7 @@ def list_visits():
 
 
 @visits_bp.route("/new", methods=["GET", "POST"])
+@login_required
 def new_visit():
     patient = None
     patient_id = request.values.get("patient_id")
@@ -73,6 +76,7 @@ def new_visit():
 
 
 @visits_bp.route("/find-patient")
+@login_required
 def find_patient():
     """Small helper endpoint: search patients to attach a new visit to."""
     q = request.args.get("q", "").strip()

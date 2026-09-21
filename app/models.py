@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 
 
@@ -34,11 +36,29 @@ class GroupAccount(db.Model):
     receivable_acc_sub_acc_id = db.Column(db.Integer)
 
 
-class SystemUser(db.Model):
+class SystemUser(UserMixin, db.Model):
     __tablename__ = "system_users"
     system_user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.Text, nullable=False, unique=True)
+    password_hash = db.Column(db.Text)
+    is_active_flag = db.Column("is_active", db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    def get_id(self):
+        # flask-login needs a string id
+        return str(self.system_user_id)
+
+    @property
+    def is_active(self):
+        # overrides UserMixin's default (always-True) so a deactivated
+        # account can't log in even with the correct password
+        return self.is_active_flag
+
+    def set_password(self, raw_password):
+        self.password_hash = generate_password_hash(raw_password)
+
+    def check_password(self, raw_password):
+        return bool(self.password_hash) and check_password_hash(self.password_hash, raw_password)
 
 
 class Patient(db.Model):

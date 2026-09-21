@@ -167,6 +167,41 @@ Run `migrations/migration_add_pharmacy.sql` on an existing database, or
 Run `migrations/migration_add_lab.sql` on an existing database, or
 `schema.sql` for a fresh install (now covers all six modules).
 
+## Authentication
+
+Every page now requires login — `system_users` is no longer a stub.
+
+**Bootstrap your first login** (run this once, from the terminal, after
+applying `migration_add_auth.sql` or the updated `schema.sql`):
+
+```bash
+flask create-admin
+```
+
+It'll prompt for a username and password and hash it correctly. From then
+on, log in at `/login`, and add more staff accounts either the same way or
+through the app at `/users` → "+ Add User".
+
+Passwords are hashed with Werkzeug's `generate_password_hash` (never stored
+in plain text). Sessions are Flask's signed-cookie sessions, keyed off
+`SECRET_KEY` in your `.env` — make sure that's a real random value in
+production, not the `dev-secret-change-me` default.
+
+### What's intentionally deferred (Auth)
+
+- **Roles/permissions** — there's only one tier: logged in or not. Any user
+  can create another user, discharge a patient, void a bill, everything.
+  Fine for a small trusted team; add role checks before this scales up or
+  handles anything you wouldn't want every staff member touching.
+- **Password reset / email** — none. If someone forgets their password,
+  another logged-in user (or you, via the database) has to set a new one.
+- **Account deactivation from the UI** — `is_active` exists on the model
+  and is enforced at login, but there's no button to flip it yet; do it
+  directly in the database for now.
+- **Audit trail** — logins aren't logged anywhere yet, and actions
+  (registered_by, processed_by, etc.) already reference `system_users` but
+  nothing surfaces "who did what" in the UI.
+
 ## What's intentionally deferred (Lab)
 
 - **Structured component-level results** — the original app has a
@@ -201,9 +236,7 @@ Run `migrations/migration_add_lab.sql` on an existing database, or
 
 ## Suggested next module
 
-All six core clinical/financial modules exist now (Patients, Visits,
-Billing, Admissions, Pharmacy, Lab). Before adding anything new, the
-highest-value work is probably wiring the ones that exist together:
-Pharmacy/Lab → Billing (so dispensed items and tests actually bill), and
-eventually real authentication (recall `system_users` is still a stub with
-no login).
+With login in place, the next highest-value work is wiring Pharmacy and Lab
+into Billing so dispensed items and tests actually generate bill lines
+instead of needing manual re-entry — that gap has been sitting there since
+the Pharmacy module was built.

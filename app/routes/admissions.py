@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from app import db
 from app.models import Admission, AdmissionWard, Patient, Visit, Ward, Bed
 
@@ -7,6 +8,7 @@ admissions_bp = Blueprint("admissions", __name__, url_prefix="/admissions")
 
 
 @admissions_bp.route("/")
+@login_required
 def list_admissions():
     status = request.args.get("status", "current")
     query = Admission.query
@@ -19,6 +21,7 @@ def list_admissions():
 
 
 @admissions_bp.route("/visit/<int:visit_id>/new", methods=["GET", "POST"])
+@login_required
 def new_admission(visit_id):
     visit = Visit.query.get_or_404(visit_id)
     patient = visit.patient
@@ -64,6 +67,7 @@ def new_admission(visit_id):
 
 
 @admissions_bp.route("/<int:admission_id>/discharge", methods=["POST"])
+@login_required
 def discharge(admission_id):
     admission = Admission.query.get_or_404(admission_id)
     admission.is_in_admission = False
@@ -83,12 +87,14 @@ def discharge(admission_id):
 # ── Wards & Beds (simple admin) ─────────────────────────────────────────
 
 @admissions_bp.route("/wards")
+@login_required
 def list_wards():
     wards = Ward.query.order_by(Ward.name).all()
     return render_template("admissions/wards.html", wards=wards)
 
 
 @admissions_bp.route("/wards/new", methods=["GET", "POST"])
+@login_required
 def new_ward():
     if request.method == "POST":
         ward = Ward(name=request.form["name"].strip())
@@ -100,6 +106,7 @@ def new_ward():
 
 
 @admissions_bp.route("/wards/<int:ward_id>/beds/new", methods=["GET", "POST"])
+@login_required
 def new_bed(ward_id):
     ward = Ward.query.get_or_404(ward_id)
     if request.method == "POST":

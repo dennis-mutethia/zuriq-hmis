@@ -1,5 +1,6 @@
 from datetime import date, datetime, timezone
 from flask import Blueprint, render_template
+from flask_login import login_required
 from app import db
 from app.models import Patient, Visit, MedicalBill
 
@@ -7,6 +8,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 
 
 @dashboard_bp.route("/")
+@login_required
 def home():
     today_start = datetime.combine(date.today(), datetime.min.time(), tzinfo=timezone.utc)
 

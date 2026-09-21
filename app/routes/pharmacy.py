@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required
 from app import db
 from app.models import Prescription, PrescriptionItem, Product, Visit
 
@@ -8,6 +9,7 @@ pharmacy_bp = Blueprint("pharmacy", __name__, url_prefix="/pharmacy")
 
 
 @pharmacy_bp.route("/")
+@login_required
 def list_prescriptions():
     status = request.args.get("status", "pending")
     query = Prescription.query
@@ -20,6 +22,7 @@ def list_prescriptions():
 
 
 @pharmacy_bp.route("/visit/<int:visit_id>/new", methods=["GET", "POST"])
+@login_required
 def new_prescription(visit_id):
     visit = Visit.query.get_or_404(visit_id)
     patient = visit.patient
@@ -69,12 +72,14 @@ def new_prescription(visit_id):
 
 
 @pharmacy_bp.route("/<int:prescription_id>")
+@login_required
 def view_prescription(prescription_id):
     prescription = Prescription.query.get_or_404(prescription_id)
     return render_template("pharmacy/view.html", prescription=prescription)
 
 
 @pharmacy_bp.route("/items/<int:item_id>/dispense", methods=["POST"])
+@login_required
 def dispense_item(item_id):
     item = PrescriptionItem.query.get_or_404(item_id)
     product = item.product
@@ -96,12 +101,14 @@ def dispense_item(item_id):
 # ── Product catalog (simple admin) ──────────────────────────────────────
 
 @pharmacy_bp.route("/products")
+@login_required
 def list_products():
     products = Product.query.order_by(Product.name).all()
     return render_template("pharmacy/products.html", products=products)
 
 
 @pharmacy_bp.route("/products/new", methods=["GET", "POST"])
+@login_required
 def new_product():
     if request.method == "POST":
         product = Product(

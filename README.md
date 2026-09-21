@@ -1,4 +1,4 @@
-# Carepoint → Flask: Patient Registration Module
+# Zuriq-HMIS → Flask: Patient Registration Module
 
 First working module of the Carepoint rebuild — patient registration, backed
 by Supabase (PostgreSQL).
@@ -11,14 +11,35 @@ by Supabase (PostgreSQL).
 
 ## 2. Create the schema
 
-1. In your Supabase project, open **SQL Editor -> New query**.
-2. Paste in the contents of `schema.sql` (in this folder) and run it.
+**New Supabase project (no tables yet):**
+1. Open **SQL Editor -> New query**.
+2. Paste in the contents of `schema.sql` and run it.
 3. Check **Table Editor** — you should see `patients`, `group_accounts`,
    `nationalities`, `id_types`, and `system_users`.
+
+**Already ran the earlier version of schema.sql (OP/IP numbers as integers)?**
+Run `migration_op_ip_numbers.sql` instead — it converts the columns to text,
+installs the auto-numbering trigger, and backfills any existing rows. Don't
+run `schema.sql` again on top of an existing table.
+
 4. Optional: add a row or two to `id_types` and `nationalities` so the
    dropdowns in the app aren't empty on first run — either via the Table
    Editor UI or by uncommenting the sample INSERT at the bottom of
    `schema.sql`.
+
+### OP / IP numbers
+
+`out_patient_no` and `in_patient_no` are system-generated — a database
+trigger fills them in as soon as a patient row is inserted:
+
+- `out_patient_no` → `ZH-OP-{patient_id}` (e.g. `ZH-OP-1042`)
+- `in_patient_no` → `ZH-IP-{patient_id}` (e.g. `ZH-IP-1042`)
+
+They're not editable in the app — the registration form just shows
+"Assigned automatically on save", and the edit form shows the assigned
+value(s) read-only. If you ever need to import legacy records with their
+original numbers, insert with an explicit value for that column — the
+trigger only fills it in when it's left `NULL`.
 
 ## 3. Get your connection string
 
@@ -54,9 +75,6 @@ list with a "Register Patient" button.
   `patients.registered_by` has something to point at. Real login/roles is
   its own module (Security), not built yet. Right now the app has no login
   wall at all — don't put this on the open internet as-is.
-- **OP number auto-assignment** — the original app likely has specific
-  sequencing/formatting rules for OutPatientNo (worth checking the real app's
-  behavior before relying on the manual entry field here).
 - **Group Account business rules** (credit limits, co-pay, visit-day capping)
   — columns exist in the schema, but no logic enforces them yet. That
   belongs in the Billing module.

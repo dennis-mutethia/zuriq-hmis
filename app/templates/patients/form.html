@@ -145,11 +145,18 @@
                     {% endfor %}
                 </select>
             </div>
-            {% if not patient %}
+            {% if patient %}
+            <div>
+                <label class="block text-sm text-slate-600 mb-1">OP / IP Number</label>
+                <input value="{{ patient.out_patient_no }}{% if patient.in_patient_no %} / {{ patient.in_patient_no }}{% endif %}"
+                       disabled
+                       class="w-full border border-slate-200 bg-slate-50 text-slate-500 rounded-lg px-3 py-2 text-sm">
+            </div>
+            {% else %}
             <div>
                 <label class="block text-sm text-slate-600 mb-1">OP Number</label>
-                <input name="out_patient_no" type="number" placeholder="Auto-assign if left blank"
-                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                <input value="Assigned automatically on save" disabled
+                       class="w-full border border-slate-200 bg-slate-50 text-slate-400 rounded-lg px-3 py-2 text-sm italic">
             </div>
             {% endif %}
             <div>

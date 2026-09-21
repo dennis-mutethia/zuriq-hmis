@@ -48,12 +48,14 @@ def new_patient():
             nationality_id=request.form.get("nationality_id") or None,
             group_account_id=request.form.get("group_account_id") or None,
             reference_no=request.form.get("reference_no") or None,
-            out_patient_no=request.form.get("out_patient_no") or None,
             note=request.form.get("note") or None,
         )
         db.session.add(patient)
         db.session.commit()
-        flash(f"Patient {patient.full_name} registered.", "success")
+        # out_patient_no/in_patient_no are filled in by a DB trigger right
+        # after insert; commit() expires the object so this access re-fetches
+        # the row and picks up the generated values.
+        flash(f"Patient {patient.full_name} registered — OP number {patient.out_patient_no}.", "success")
         return redirect(url_for("patients.list_patients"))
 
     return render_template(

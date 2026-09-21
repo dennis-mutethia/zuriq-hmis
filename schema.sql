@@ -1,4 +1,4 @@
--- Carepoint → Supabase (PostgreSQL) schema
+-- Zuriq-HMIS → Supabase (PostgreSQL) schema
 -- Module: Patient Registration
 --
 -- Source of truth: extracted from the decompiled Carepoint 3.2 source
@@ -7,6 +7,11 @@
 -- column name is noted in a comment where it differs.
 --
 -- Run this in the Supabase SQL Editor (Project -> SQL Editor -> New query).
+--
+-- NOTE: if you already ran an earlier version of this file (with
+-- out_patient_no/in_patient_no as INTEGER), don't re-run this — use
+-- migration_op_ip_numbers.sql instead, which alters the existing table
+-- in place without losing data.
 
 -- ── Lookup tables ────────────────────────────────────────────────────────
 
@@ -52,6 +57,8 @@ CREATE TABLE system_users (
 
 CREATE TABLE patients (
     patient_id               SERIAL PRIMARY KEY,
+    out_patient_no            TEXT,                    -- system-generated: 'ZH-OP-' || patient_id
+    in_patient_no             TEXT,                    -- system-generated: 'ZH-IP-' || patient_id
     surname                   TEXT NOT NULL,
     other_names               TEXT NOT NULL,
     third_name                TEXT,
@@ -80,14 +87,37 @@ CREATE TABLE patients (
     note                      TEXT,
     registered_by             INTEGER REFERENCES system_users(system_user_id),
 
-    CONSTRAINT patients_out_patient_no_unique UNIQUE (out_patient_no)
+    CONSTRAINT patients_out_patient_no_unique UNIQUE (out_patient_no),
+    CONSTRAINT patients_in_patient_no_unique UNIQUE (in_patient_no)
 );
 
 CREATE INDEX idx_patients_surname_othernames ON patients (surname, other_names);
 CREATE INDEX idx_patients_out_patient_no ON patients (out_patient_no);
 CREATE INDEX idx_patients_id_number ON patients (id_number);
 
+-- ── Auto-generate OP/IP numbers ─────────────────────────────────────────
+-- patient_id is only known once the row exists (SERIAL), so an AFTER INSERT
+-- trigger fills these in right after the insert. COALESCE means an explicit
+-- value passed in by the app (e.g. when migrating legacy records) is kept
+-- instead of being overwritten.
+
+CREATE OR REPLACE FUNCTION assign_patient_numbers()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE patients
+    SET out_patient_no = COALESCE(out_patient_no, 'ZH-OP-' || NEW.patient_id),
+        in_patient_no  = COALESCE(in_patient_no,  'ZH-IP-' || NEW.patient_id)
+    WHERE patient_id = NEW.patient_id;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_assign_patient_numbers
+AFTER INSERT ON patients
+FOR EACH ROW
+EXECUTE FUNCTION assign_patient_numbers();
+
 -- ── Optional starter data ───────────────────────────────────────────────
 -- Uncomment and adjust to your context before running, or add via the app later.
 
-INSERT INTO id_types (id_type) VALUES ('National ID'), ('Passport'), ('Birth Certificate');
+-- INSERT INTO id_types (id_type) VALUES ('National ID'), ('Passport'), ('Birth Certificate');

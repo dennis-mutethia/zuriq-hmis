@@ -45,8 +45,8 @@ class Patient(db.Model):
     __tablename__ = "patients"
 
     patient_id = db.Column(db.Integer, primary_key=True)
-    out_patient_no = db.Column(db.Integer, unique=True)
-    in_patient_no = db.Column(db.Integer)
+    out_patient_no = db.Column(db.Text, unique=True)   # system-generated: ZH-OP-{patient_id}
+    in_patient_no = db.Column(db.Text, unique=True)    # system-generated: ZH-IP-{patient_id}
     surname = db.Column(db.Text, nullable=False)
     other_names = db.Column(db.Text, nullable=False)
     third_name = db.Column(db.Text)

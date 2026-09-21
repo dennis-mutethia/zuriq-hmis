@@ -367,6 +367,31 @@ CREATE INDEX idx_prescriptions_visit_id ON prescriptions (visit_id);
 CREATE INDEX idx_prescriptions_patient_id ON prescriptions (patient_id);
 CREATE INDEX idx_prescription_items_prescription_id ON prescription_items (prescription_id);
 
+-- Every change to quantity_in_stock — intake or dispensing — is logged
+-- here. Without this, stock changes had zero audit trail: no record of
+-- who received or dispensed what, or when.
+CREATE TABLE suppliers (
+    supplier_id      SERIAL PRIMARY KEY,
+    name              TEXT NOT NULL,
+    contact_person    TEXT,
+    telephone         TEXT,
+    email             TEXT,
+    is_active         BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE stock_movements (
+    stock_movement_id  SERIAL PRIMARY KEY,
+    product_id           INTEGER NOT NULL REFERENCES products(product_id),
+    supplier_id           INTEGER REFERENCES suppliers(supplier_id),  -- set on intake, null on dispensing
+    quantity_change       INTEGER NOT NULL,   -- positive = received, negative = dispensed/adjusted out
+    reason                 TEXT NOT NULL,      -- e.g. 'Stock intake', 'Dispensed — Rx #42'
+    recorded_by            INTEGER REFERENCES system_users(system_user_id),
+    created_at             TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_stock_movements_product_id ON stock_movements (product_id);
+CREATE INDEX idx_stock_movements_supplier_id ON stock_movements (supplier_id);
+
 -- ── Module: Lab ──────────────────────────────────────────────────────────
 -- Source: tbltests, tblmedreqtests, tblmedreqtestitems
 -- Note: the original also has tbltestcomponents (structured component-level

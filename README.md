@@ -340,18 +340,41 @@ production, not the `dev-secret-change-me` default.
 - **Reference ranges / flagging abnormal results** — no automatic
   high/low flagging yet, since there's no structured range data wired in.
 
+## Stock Intake & Movement Ledger
+
+Stock could previously only go down (dispensing) — there was no way to
+receive new stock except editing the database directly, which meant the
+module would eventually stop working once initial stock ran out. Fixed:
+
+- **`/pharmacy/products/<id>/receive`** — add received stock with an
+  optional note (supplier/invoice reference)
+- **Every stock change is now logged** — `stock_movements` records
+  quantity, reason, who did it, and when, for both intake and dispensing
+  (dispensing wasn't logged anywhere before this either)
+- **`/pharmacy/products/<id>/history`** — the ledger for a single product
+
+A `suppliers` table now exists too — the intake form has a supplier
+dropdown ("Add a supplier" inline if the one you need isn't listed yet),
+and each stock movement records which supplier it came from. This is
+intentionally *not* a full purchase-order/GRN workflow — no PO numbers,
+no cost reconciliation, no approval flow. It's the minimum needed to keep
+the Pharmacy module actually usable over time and to know where stock
+came from.
+
+Run these on an existing database, in order:
+`migrations/migration_add_stock_movements.sql`, then
+`migrations/migration_add_suppliers.sql`. Fresh installs: `schema.sql`
+already has both.
+
 ## What's intentionally deferred (Pharmacy)
 
 - **Insurance/scheme drug pricing** — the original app has ~20 per-insurer
   price columns on the product table (NHIF, AAR, Britam, Jubilee, etc.);
   only a single cash price exists here for now, same simplification as
   Services in Billing.
-- **Dispensing → Billing link** — dispensed medication doesn't automatically
-  add a line item to a medical bill yet; Billing and Pharmacy are separate
-  flows for now.
-- **Stock intake / purchase orders** — `quantity_in_stock` only goes down
-  (via dispensing); there's no way to receive new stock in the app yet,
-  only by editing the database directly.
+- **Purchase orders** — suppliers exist and are linked to intake now, but
+  there's no PO/GRN workflow — no order placed, expected, or reconciled
+  against what actually arrived. Intake is still a manual quantity entry.
 
 ## What's intentionally deferred (Admissions)
 

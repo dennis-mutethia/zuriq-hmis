@@ -333,6 +333,32 @@ class Product(db.Model):
         return self.quantity_in_stock <= self.reorder_level
 
 
+class Supplier(db.Model):
+    __tablename__ = "suppliers"
+    supplier_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    contact_person = db.Column(db.Text)
+    telephone = db.Column(db.Text)
+    email = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+
+class StockMovement(db.Model):
+    __tablename__ = "stock_movements"
+
+    stock_movement_id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.product_id"), nullable=False)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.supplier_id"))
+    quantity_change = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.Text, nullable=False)
+    recorded_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    product = db.relationship("Product", backref="stock_movements")
+    supplier = db.relationship("Supplier")
+    recorded_by_user = db.relationship("SystemUser")
+
+
 class Prescription(db.Model):
     __tablename__ = "prescriptions"
 

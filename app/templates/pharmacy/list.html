@@ -5,9 +5,10 @@
 
 <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-semibold text-ink">Prescriptions</h1>
-    <a href="{{ url_for('pharmacy.list_products') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
-        Manage Products
-    </a>
+    <div class="flex items-center gap-4 text-sm">
+        <a href="{{ url_for('pharmacy.list_products') }}" class="text-brand-600 hover:text-brand-700 font-medium">Manage Products</a>
+        <a href="{{ url_for('pharmacy.list_suppliers') }}" class="text-brand-600 hover:text-brand-700 font-medium">Suppliers</a>
+    </div>
 </div>
 
 <div class="flex gap-2 mb-6">

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Stock History — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Pharmacy{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-semibold text-ink">{{ product.name }}</h1>
+        <p class="text-muted">Currently {{ product.quantity_in_stock }} in stock</p>
+    </div>
+    <a href="{{ url_for('pharmacy.receive_stock', product_id=product.product_id) }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+        + Receive Stock
+    </a>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Change</th>
+                <th class="px-4 py-3">Reason</th>
+                <th class="px-4 py-3">Supplier</th>
+                <th class="px-4 py-3">Recorded By</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for m in movements %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 text-muted">{{ m.created_at.strftime("%d %b %Y %H:%M") }}</td>
+                <td class="px-4 py-3 font-mono font-medium {{ 'text-success' if m.quantity_change > 0 else 'text-danger' }}">
+                    {{ "+%d"|format(m.quantity_change) if m.quantity_change > 0 else m.quantity_change }}
+                </td>
+                <td class="px-4 py-3">{{ m.reason }}</td>
+                <td class="px-4 py-3 text-muted">{{ m.supplier.name if m.supplier else "—" }}</td>
+                <td class="px-4 py-3 text-muted">{{ m.recorded_by_user.username if m.recorded_by_user else "—" }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-muted/60">No stock movements recorded yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

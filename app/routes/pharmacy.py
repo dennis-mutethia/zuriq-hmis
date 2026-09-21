@@ -3,7 +3,7 @@ from decimal import Decimal
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app import db
-from app.models import Prescription, PrescriptionItem, Product, Visit
+from app.models import Prescription, PrescriptionItem, Product, Visit, MedicalBill
 
 pharmacy_bp = Blueprint("pharmacy", __name__, url_prefix="/pharmacy")
 
@@ -93,8 +93,21 @@ def dispense_item(item_id):
     if product:
         product.quantity_in_stock -= item.quantity
 
-    db.session.commit()
-    flash(f"{item.inscription} dispensed.", "success")
+    visit = item.prescription.visit
+    billed_note = ""
+    if visit and product:
+        bill = MedicalBill.get_or_create_for_visit(visit)
+        bill.add_item(
+            name=f"{product.name} x{item.quantity}",
+            quantity=1,
+            rate=product.unit_price * item.quantity,
+        )
+        db.session.commit()
+        billed_note = f" Added to bill {bill.medical_bill_no}."
+    else:
+        db.session.commit()
+
+    flash(f"{item.inscription} dispensed.{billed_note}", "success")
     return redirect(url_for("pharmacy.view_prescription", prescription_id=item.prescription_id))
 
 

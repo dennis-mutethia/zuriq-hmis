@@ -184,6 +184,49 @@ class MedicalBill(db.Model):
     def balance_due(self):
         return (self.total_bill_amount or 0) - (self.total_amount_paid or 0) - (self.cover_amount or 0)
 
+    @staticmethod
+    def get_or_create_for_visit(visit):
+        """The one open (unpaid) bill for this visit — created if it
+        doesn't exist yet. Services, Pharmacy, and Lab all bill into this
+        same running total rather than each starting a separate bill."""
+        bill = (
+            MedicalBill.query
+            .filter_by(visit_id=visit.visit_id, is_processed=False)
+            .order_by(MedicalBill.medical_bill_id.desc())
+            .first()
+        )
+        if bill is None:
+            patient = visit.patient
+            bill = MedicalBill(
+                visit_id=visit.visit_id,
+                patient_id=patient.patient_id,
+                is_patient=True,
+                customer_name=patient.full_name,
+                telephone_no=patient.telephone1,
+                id_number=patient.id_number,
+                group_account_id=patient.group_account_id,
+            )
+            db.session.add(bill)
+            db.session.flush()  # need medical_bill_id before adding items
+        return bill
+
+    def add_item(self, name, quantity, rate, service_id=None):
+        from decimal import Decimal
+        rate = Decimal(rate or 0)
+        quantity = int(quantity or 1)
+        amount = rate * quantity
+        item = BillItem(
+            medical_bill_id=self.medical_bill_id,
+            service_id=service_id,
+            name=name,
+            quantity=quantity,
+            rate=rate,
+            amount=amount,
+        )
+        db.session.add(item)
+        self.total_bill_amount = Decimal(self.total_bill_amount or 0) + amount
+        return item
+
 
 class BillItem(db.Model):
     __tablename__ = "bill_items"
@@ -318,6 +361,7 @@ class Test(db.Model):
     test_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
     specimen = db.Column(db.Text)
+    cash_rate = db.Column(db.Numeric(14, 2), nullable=False, default=0)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
 

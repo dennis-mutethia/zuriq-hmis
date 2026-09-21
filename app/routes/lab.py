@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app import db
-from app.models import LabRequest, LabRequestItem, Test, Visit
+from app.models import LabRequest, LabRequestItem, Test, Visit, MedicalBill
 
 lab_bp = Blueprint("lab", __name__, url_prefix="/lab")
 
@@ -74,8 +75,19 @@ def view_request(lab_request_id):
         lab_request.technologist = request.form.get("technologist") or None
         lab_request.is_done = True
         lab_request.date_time_done = datetime.now(timezone.utc)
-        db.session.commit()
-        flash("Results saved.", "success")
+
+        billed_note = ""
+        if lab_request.visit:
+            bill = MedicalBill.get_or_create_for_visit(lab_request.visit)
+            for item in lab_request.items:
+                if item.test:
+                    bill.add_item(name=item.test_name, quantity=1, rate=item.test.cash_rate)
+            db.session.commit()
+            billed_note = f" Added to bill {bill.medical_bill_no}."
+        else:
+            db.session.commit()
+
+        flash(f"Results saved.{billed_note}", "success")
         return redirect(url_for("lab.list_requests"))
 
     return render_template("lab/view.html", lab_request=lab_request)
@@ -97,6 +109,7 @@ def new_test():
         test = Test(
             name=request.form["name"].strip(),
             specimen=request.form.get("specimen") or None,
+            cash_rate=Decimal(request.form.get("cash_rate", "0") or "0"),
         )
         db.session.add(test)
         db.session.commit()

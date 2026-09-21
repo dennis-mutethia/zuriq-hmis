@@ -39,41 +39,18 @@ def new_bill_for_visit(visit_id):
             flash("Add at least one service before saving the bill.", "error")
             return redirect(url_for("billing.new_bill_for_visit", visit_id=visit.visit_id))
 
-        bill = MedicalBill(
-            visit_id=visit.visit_id,
-            patient_id=patient.patient_id,
-            is_patient=True,
-            customer_name=patient.full_name,
-            telephone_no=patient.telephone1,
-            id_number=patient.id_number,
-            group_account_id=patient.group_account_id,
-        )
-        db.session.add(bill)
-        db.session.flush()  # get medical_bill_id before adding items
+        bill = MedicalBill.get_or_create_for_visit(visit)
 
-        total = Decimal("0")
         for service_id, qty_raw in zip(service_ids, quantities):
             service = Service.query.get(service_id)
             if not service:
                 continue
-            qty = int(qty_raw or 1)
-            rate = service.cash_rate or Decimal("0")
-            amount = rate * qty
-            db.session.add(BillItem(
-                medical_bill_id=bill.medical_bill_id,
-                service_id=service.service_id,
-                name=service.name,
-                quantity=qty,
-                rate=rate,
-                amount=amount,
-            ))
-            total += amount
+            bill.add_item(name=service.name, quantity=qty_raw, rate=service.cash_rate, service_id=service.service_id)
 
-        bill.total_bill_amount = total
         visit.is_processed = True
         db.session.commit()
 
-        flash(f"Bill {bill.medical_bill_no} created for {patient.full_name} — KES {total:,.2f}.", "success")
+        flash(f"Bill {bill.medical_bill_no} updated for {patient.full_name} — running total KES {bill.total_bill_amount:,.2f}.", "success")
         return redirect(url_for("billing.list_bills"))
 
     return render_template(

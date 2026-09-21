@@ -167,6 +167,42 @@ Run `migrations/migration_add_pharmacy.sql` on an existing database, or
 Run `migrations/migration_add_lab.sql` on an existing database, or
 `schema.sql` for a fresh install (now covers all six modules).
 
+## Billing links (Pharmacy + Lab → Billing)
+
+Dispensing a medication or completing a lab test now generates a real bill
+line automatically, instead of needing manual re-entry in Billing:
+
+- **Dispensing** a prescription item adds `Product Name x{quantity}` to the
+  visit's bill at `product.unit_price × quantity`
+- **Saving lab results** adds each completed test to the visit's bill at
+  `test.cash_rate` — this is why tests now have a cash rate (they didn't
+  before; see `migrations/migration_billing_links.sql`)
+- All three sources — OPD services, Pharmacy, Lab — now bill into **the
+  same running bill per visit** rather than each starting a separate one.
+  `MedicalBill.get_or_create_for_visit()` finds the visit's existing unpaid
+  bill and adds to it, or starts one if none exists yet. This also fixed a
+  latent issue in the original Billing flow: clicking "Bill" on a visit
+  more than once used to create duplicate bills for the same visit — now
+  it correctly adds to the one open bill instead.
+- If a prescription or lab request isn't tied to a visit (nullable by
+  design — matches the original schema's support for self-requests /
+  walk-ins), nothing gets billed automatically; that stays a manual
+  Billing entry for now.
+
+Run `migrations/migration_billing_links.sql` on an existing database (adds
+`tests.cash_rate` — safe to run even if you already have `tests` and
+`bill_items` from earlier migrations). Fresh installs: `schema.sql` already
+includes it.
+
+### What's intentionally deferred (Billing links)
+
+- **Editing/removing an auto-billed item** — once dispensing or a lab
+  result adds a line, there's no undo in the UI; fixing a mistake means
+  editing the database directly.
+- **Discounts/insurance on dispensed or lab items** — they bill at full
+  cash rate; the discount/cover-amount logic that exists on `medical_bills`
+  isn't applied automatically to these lines.
+
 ## Authentication
 
 Every page now requires login — `system_users` is no longer a stub.
@@ -236,7 +272,9 @@ production, not the `dev-secret-change-me` default.
 
 ## Suggested next module
 
-With login in place, the next highest-value work is wiring Pharmacy and Lab
-into Billing so dispensed items and tests actually generate bill lines
-instead of needing manual re-entry — that gap has been sitting there since
-the Pharmacy module was built.
+With billing links and auth both in place, the system now has a coherent
+end-to-end flow: register → visit → prescribe/lab/bill → pay, all behind a
+login. From here, worth picking based on what you'll actually use day to
+day rather than building speculatively — either a real report/reconciliation
+view (cash collected, outstanding balances, stock levels), or roles so not
+every logged-in user can do everything.

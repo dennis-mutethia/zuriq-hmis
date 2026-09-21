@@ -358,6 +358,7 @@ CREATE TABLE tests (
     test_id     SERIAL PRIMARY KEY,
     name        TEXT NOT NULL,
     specimen    TEXT,          -- e.g. 'Blood', 'Urine'
+    cash_rate   NUMERIC(14,2) NOT NULL DEFAULT 0,
     is_active   BOOLEAN NOT NULL DEFAULT TRUE
 );
 

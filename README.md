@@ -167,6 +167,33 @@ Run `migrations/migration_add_pharmacy.sql` on an existing database, or
 Run `migrations/migration_add_lab.sql` on an existing database, or
 `schema.sql` for a fresh install (now covers all six modules).
 
+## Reports
+
+`/reports` — the "nice dashboards" you mentioned wanting eventually. Built
+now rather than earlier because it needed real data flowing through
+(bills, visits, stock) to be useful instead of decorative.
+
+- **Revenue collected, last 30 days** — bar chart, grouped by day, from
+  actual `total_amount_paid` on bills created each day
+- **Visit volume, last 14 days** — line chart, from `visits`
+- **Top outstanding bills** — the 10 largest unpaid balances, computed the
+  same way `balance_due` is computed everywhere else in the app (total −
+  paid − insurance cover), with a running total across all pending bills
+- **Low stock products** — anything at or below its reorder level
+
+Charts use Chart.js (CDN, no build step) styled to match the app's teal/ink
+palette rather than default chart colors. This is a live query page, not a
+cached report — it re-runs on every visit, which is fine at this scale but
+worth revisiting if the bills/visits tables get very large later.
+
+### What's intentionally deferred (Reports)
+
+- **Date range picker** — the 30/14-day windows are hardcoded, not
+  adjustable in the UI.
+- **Export** — no CSV/PDF export of any report yet.
+- **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
+  no filtering by clinic, consultant, or payment method yet.
+
 ## Billing links (Pharmacy + Lab → Billing)
 
 Dispensing a medication or completing a lab test now generates a real bill
@@ -272,9 +299,7 @@ production, not the `dev-secret-change-me` default.
 
 ## Suggested next module
 
-With billing links and auth both in place, the system now has a coherent
-end-to-end flow: register → visit → prescribe/lab/bill → pay, all behind a
-login. From here, worth picking based on what you'll actually use day to
-day rather than building speculatively — either a real report/reconciliation
-view (cash collected, outstanding balances, stock levels), or roles so not
-every logged-in user can do everything.
+The end-to-end flow and reporting both exist now. The remaining real gap is
+**roles** — every logged-in user can still do everything (discharge a
+patient, void a bill, add another user). Worth doing before more than a
+couple of trusted people are using this day to day.

@@ -53,4 +53,7 @@ def create_app():
     from app.routes.lab import lab_bp
     app.register_blueprint(lab_bp)
 
+    from app.routes.reports import reports_bp
+    app.register_blueprint(reports_bp)
+
     return app

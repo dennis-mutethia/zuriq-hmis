@@ -140,6 +140,34 @@ depends on `assign_inpatient_number()` already existing — run
 `migration_op_ip_numbers.sql` first if you haven't). Fresh installs: just
 run `schema.sql`, which now includes all four modules.
 
+**Pharmacy / Dispensing** (`/pharmacy`)
+- Create a prescription directly from a visit (multiple medications, each
+  with quantity, frequency, and duration)
+- Dispense line items individually — dispensing deducts from
+  `products.quantity_in_stock` and blocks if there isn't enough on hand
+- A prescription's status (Pending/Fully dispensed) reflects whether every
+  item on it has been dispensed
+- Simple product catalog admin (`/pharmacy/products`) with a low-stock
+  indicator once quantity drops to the reorder level
+- Visit list shows a "Prescribe" shortcut (always available — unlike
+  Bill/Admit, a visit can have more than one prescription)
+
+Run `migrations/migration_add_pharmacy.sql` on an existing database, or
+`schema.sql` for a fresh install (now covers all five modules).
+
+## What's intentionally deferred (Pharmacy)
+
+- **Insurance/scheme drug pricing** — the original app has ~20 per-insurer
+  price columns on the product table (NHIF, AAR, Britam, Jubilee, etc.);
+  only a single cash price exists here for now, same simplification as
+  Services in Billing.
+- **Dispensing → Billing link** — dispensed medication doesn't automatically
+  add a line item to a medical bill yet; Billing and Pharmacy are separate
+  flows for now.
+- **Stock intake / purchase orders** — `quantity_in_stock` only goes down
+  (via dispensing); there's no way to receive new stock in the app yet,
+  only by editing the database directly.
+
 ## What's intentionally deferred (Admissions)
 
 - **Ward transfers** — the schema supports a patient moving beds mid-admission
@@ -151,5 +179,7 @@ run `schema.sql`, which now includes all four modules.
 
 ## Suggested next module
 
-Pharmacy/Dispensing or Lab — both are common next steps off a visit, and
-neither depends on anything not already in place.
+Lab (test requests + results) — the other common next step off a visit,
+and doesn't depend on anything not already in place. After that, linking
+Pharmacy and Billing together (so dispensed items bill automatically) is
+worth doing before adding more new modules.

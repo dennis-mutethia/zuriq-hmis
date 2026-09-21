@@ -236,3 +236,58 @@ class AdmissionWard(db.Model):
 
     ward = db.relationship("Ward")
     bed = db.relationship("Bed")
+
+
+class Product(db.Model):
+    __tablename__ = "products"
+    product_id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.Text)
+    name = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
+    unit_definition = db.Column(db.Text)
+    unit_cost = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    unit_price = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    quantity_in_stock = db.Column(db.Integer, nullable=False, default=0)
+    reorder_level = db.Column(db.Integer, nullable=False, default=0)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+    @property
+    def is_low_stock(self):
+        return self.quantity_in_stock <= self.reorder_level
+
+
+class Prescription(db.Model):
+    __tablename__ = "prescriptions"
+
+    prescription_id = db.Column(db.Integer, primary_key=True)
+    visit_id = db.Column(db.Integer, db.ForeignKey("visits.visit_id"))
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"), nullable=False)
+    prescribed_by = db.Column(db.Text)
+    special_instruction = db.Column(db.Text)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    patient = db.relationship("Patient")
+    visit = db.relationship("Visit")
+    items = db.relationship("PrescriptionItem", backref="prescription", cascade="all, delete-orphan")
+
+    @property
+    def is_fully_dispensed(self):
+        return bool(self.items) and all(i.has_been_dispensed for i in self.items)
+
+
+class PrescriptionItem(db.Model):
+    __tablename__ = "prescription_items"
+
+    prescription_item_id = db.Column(db.Integer, primary_key=True)
+    prescription_id = db.Column(db.Integer, db.ForeignKey("prescriptions.prescription_id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.product_id"))
+    inscription = db.Column(db.Text, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    quantity_per_time = db.Column(db.Text)
+    frequency_per_day = db.Column(db.Text)
+    dosage_duration = db.Column(db.Text)
+    other_instruction = db.Column(db.Text)
+    has_been_dispensed = db.Column(db.Boolean, nullable=False, default=False)
+    dispensed_at = db.Column(db.DateTime(timezone=True))
+
+    product = db.relationship("Product")

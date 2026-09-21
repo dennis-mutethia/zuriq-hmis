@@ -29,4 +29,7 @@ def create_app():
     from app.routes.admissions import admissions_bp
     app.register_blueprint(admissions_bp)
 
+    from app.routes.pharmacy import pharmacy_bp
+    app.register_blueprint(pharmacy_bp)
+
     return app

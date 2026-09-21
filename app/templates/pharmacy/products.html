@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Products — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Pharmacy{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Product Catalog</h1>
+    <a href="{{ url_for('pharmacy.new_product') }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+        + Add Product
+    </a>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">Unit</th>
+                <th class="px-4 py-3 text-right">Price (KES)</th>
+                <th class="px-4 py-3 text-right">In Stock</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for p in products %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ p.name }}</td>
+                <td class="px-4 py-3 text-muted">{{ p.unit_definition or "—" }}</td>
+                <td class="px-4 py-3 text-right">{{ "%.2f"|format(p.unit_price) }}</td>
+                <td class="px-4 py-3 text-right font-mono">{{ p.quantity_in_stock }}</td>
+                <td class="px-4 py-3 text-right">
+                    {% if p.is_low_stock %}
+                    <span class="text-xs bg-warn/10 text-warn px-2 py-1 rounded-full">Low stock</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-muted/60">No products yet — add one to start prescribing.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

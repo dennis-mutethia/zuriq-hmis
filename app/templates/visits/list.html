@@ -55,6 +55,8 @@
                     <a href="{{ url_for('admissions.new_admission', visit_id=v.visit_id) }}"
                        class="text-ink/70 hover:text-ink font-medium ml-3">Admit</a>
                     {% endif %}
+                    <a href="{{ url_for('pharmacy.new_prescription', visit_id=v.visit_id) }}"
+                       class="text-ink/70 hover:text-ink font-medium ml-3">Prescribe</a>
                 </td>
             </tr>
             {% else %}

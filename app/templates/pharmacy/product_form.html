@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Add Product — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Pharmacy{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Add Product</h1>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-lg space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Name *</label>
+        <input name="name" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">Code</label>
+            <input name="code" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Unit</label>
+            <input name="unit_definition" placeholder="e.g. Tablet" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">Unit Cost (KES)</label>
+            <input type="number" step="0.01" min="0" name="unit_cost" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Unit Price (KES) *</label>
+            <input type="number" step="0.01" min="0" name="unit_price" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">Quantity in Stock</label>
+            <input type="number" min="0" name="quantity_in_stock" value="0" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Reorder Level</label>
+            <input type="number" min="0" name="reorder_level" value="0" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Product
+        </button>
+        <a href="{{ url_for('pharmacy.list_products') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

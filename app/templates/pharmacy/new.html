@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}New Prescription — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Pharmacy{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Create Prescription</h1>
+
+<div class="bg-white rounded-xl border border-ink/10 p-4 mb-6">
+    <div class="font-semibold text-ink">{{ patient.full_name }}</div>
+    <div class="text-sm text-muted">OP: <span class="font-mono">{{ patient.out_patient_no }}</span> · Visit: {{ visit.visit_datetime.strftime("%d %b %Y %H:%M") }}</div>
+</div>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-4xl space-y-6">
+    <div>
+        <label class="block text-sm text-muted mb-1">Prescribed By</label>
+        <input name="prescribed_by" value="{{ visit.doctor or '' }}" class="w-full sm:w-64 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+
+    <div id="line-items" class="space-y-3">
+        <div class="grid grid-cols-12 gap-3 text-xs font-semibold text-muted uppercase px-1">
+            <div class="col-span-4">Medication</div>
+            <div class="col-span-2">Quantity</div>
+            <div class="col-span-2">Frequency/day</div>
+            <div class="col-span-2">Duration</div>
+            <div class="col-span-2"></div>
+        </div>
+        <div class="line-item grid grid-cols-12 gap-3">
+            <select name="product_id" class="col-span-4 border border-ink/15 rounded-lg px-3 py-2 text-sm" required>
+                <option value="">— Select medication —</option>
+                {% for prod in products %}
+                <option value="{{ prod.product_id }}">{{ prod.name }}{% if prod.is_low_stock %} (low stock: {{ prod.quantity_in_stock }}){% endif %}</option>
+                {% endfor %}
+            </select>
+            <input type="number" name="quantity" value="1" min="1" class="col-span-2 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="frequency_per_day" placeholder="e.g. TDS" class="col-span-2 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="dosage_duration" placeholder="e.g. 5 days" class="col-span-2 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <button type="button" onclick="removeLine(this)" class="col-span-2 text-sm text-danger hover:text-danger/80">Remove</button>
+        </div>
+    </div>
+
+    <button type="button" onclick="addLine()" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
+        + Add another medication
+    </button>
+
+    <div>
+        <label class="block text-sm text-muted mb-1">Special Instructions</label>
+        <textarea name="special_instruction" rows="2" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm"></textarea>
+    </div>
+
+    <div class="flex items-center gap-3 pt-4 border-t border-ink/10">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Prescription
+        </button>
+        <a href="{{ url_for('visits.list_visits') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+<template id="line-template">
+    <div class="line-item grid grid-cols-12 gap-3">
+        <select name="product_id" class="col-span-4 border border-ink/15 rounded-lg px-3 py-2 text-sm" required>
+            <option value="">— Select medication —</option>
+            {% for prod in products %}
+            <option value="{{ prod.product_id }}">{{ prod.name }}{% if prod.is_low_stock %} (low stock: {{ prod.quantity_in_stock }}){% endif %}</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="quantity" value="1" min="1" class="col-span-2 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <input name="frequency_per_day" placeholder="e.g. TDS" class="col-span-2 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <input name="dosage_duration" placeholder="e.g. 5 days" class="col-span-2 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <button type="button" onclick="removeLine(this)" class="col-span-2 text-sm text-danger hover:text-danger/80">Remove</button>
+    </div>
+</template>
+
+<script>
+function addLine() {
+    const tpl = document.getElementById('line-template');
+    document.getElementById('line-items').appendChild(tpl.content.cloneNode(true));
+}
+function removeLine(btn) {
+    const items = document.querySelectorAll('.line-item');
+    if (items.length > 1) btn.closest('.line-item').remove();
+}
+</script>
+
+{% endblock %}

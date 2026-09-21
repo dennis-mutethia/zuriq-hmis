@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Pharmacy — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Pharmacy{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Prescriptions</h1>
+    <a href="{{ url_for('pharmacy.list_products') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
+        Manage Products
+    </a>
+</div>
+
+<div class="flex gap-2 mb-6">
+    <a href="{{ url_for('pharmacy.list_prescriptions', status='pending') }}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium {{ 'bg-brand-50 text-brand-700' if status == 'pending' else 'text-muted hover:bg-canvas' }}">
+        Pending
+    </a>
+    <a href="{{ url_for('pharmacy.list_prescriptions', status='dispensed') }}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium {{ 'bg-brand-50 text-brand-700' if status == 'dispensed' else 'text-muted hover:bg-canvas' }}">
+        Fully Dispensed
+    </a>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Patient</th>
+                <th class="px-4 py-3">OP No.</th>
+                <th class="px-4 py-3">Prescribed By</th>
+                <th class="px-4 py-3">Items</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for p in prescriptions %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 text-muted">{{ p.created_at.strftime("%d %b %Y %H:%M") }}</td>
+                <td class="px-4 py-3 font-medium">{{ p.patient.full_name }}</td>
+                <td class="px-4 py-3 font-mono text-muted">{{ p.patient.out_patient_no or "—" }}</td>
+                <td class="px-4 py-3">{{ p.prescribed_by or "—" }}</td>
+                <td class="px-4 py-3">{{ p.items|length }}</td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('pharmacy.view_prescription', prescription_id=p.prescription_id) }}"
+                       class="text-brand-600 hover:text-brand-700 font-medium">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="px-4 py-8 text-center text-muted/60">No prescriptions in this view.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

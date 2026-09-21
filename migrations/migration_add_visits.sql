@@ -29,4 +29,8 @@ CREATE TABLE IF NOT EXISTS visits (
 CREATE INDEX IF NOT EXISTS idx_visits_patient_id ON visits (patient_id);
 CREATE INDEX IF NOT EXISTS idx_visits_visit_datetime ON visits (visit_datetime);
 
+INSERT INTO clinics (name) VALUES
+    ('General Outpatient'),
+    ('Maternal & Child Health');
+    
 COMMIT;

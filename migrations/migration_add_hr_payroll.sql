@@ -93,4 +93,12 @@ CREATE INDEX IF NOT EXISTS idx_payslip_items_payslip_id ON payslip_items (paysli
 INSERT INTO employment_types (name) VALUES ('Permanent'), ('Contract'), ('Casual'), ('Part-time')
 ON CONFLICT (name) DO NOTHING;
 
+INSERT INTO payroll_parameter_categories (name, category_type)
+SELECT v.name, v.category_type FROM (VALUES ('Earnings', 'Earning'), ('Deductions', 'Deduction')) AS v(name, category_type)
+WHERE NOT EXISTS (SELECT 1 FROM payroll_parameter_categories c WHERE c.name = v.name);
+
+INSERT INTO payroll_parameters (name, parameter_category_id)
+SELECT 'Basic Salary', (SELECT parameter_category_id FROM payroll_parameter_categories WHERE name = 'Earnings')
+WHERE NOT EXISTS (SELECT 1 FROM payroll_parameters WHERE name = 'Basic Salary');
+
 COMMIT;

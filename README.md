@@ -296,9 +296,19 @@ Employment types are seeded (Permanent, Contract, Casual, Part-time) so
 the Employee form isn't empty on first use, and are admin-only to add or
 edit (`/hr/employment-types`) — anyone logged in can view the list (the
 Employee form needs it), but only an admin sees the "Add" form or "Edit"
-links. Payroll parameters are deliberately left unseeded — unlike a short,
-generic list like employment types, guessing at what earnings/deductions
-your organization actually uses felt more presumptuous than helpful.
+links.
+
+**On salary specifically:** there's no dedicated "salary" field on
+Employee — it's set the same way as any other payroll component, via
+standing payroll parameters. Two category shells (**Earnings**,
+**Deductions**) and one parameter (**Basic Salary**, under Earnings) are
+seeded, since those are just names and carry no accuracy risk. To set an
+employee's salary: open their record → "Standing Payroll Parameters" →
+select **Basic Salary** → enter the amount. Everything else
+(House Allowance, PAYE, NHIF, NSSF, ...) still isn't seeded — those either
+vary by organization or need verified current statutory rates, and
+guessing at either felt more presumptuous than helpful; add them via
+`/hr/parameters` as needed.
 
 Run `migrations/migration_add_hr_payroll.sql` on an existing database, or
 `schema.sql` for fresh installs.

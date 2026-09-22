@@ -662,6 +662,19 @@ CREATE INDEX idx_payslip_items_payslip_id ON payslip_items (payslip_id);
 -- edit or add more via /hr/employment-types (admin only).
 INSERT INTO employment_types (name) VALUES ('Permanent'), ('Contract'), ('Casual'), ('Part-time');
 
+-- Category shells and one near-universal parameter (Basic Salary) — safe
+-- to seed since these are just names, not statutory amounts. PAYE/NHIF/
+-- NSSF are deliberately NOT seeded here (see the module comment above):
+-- those need current, verified rates, and getting that wrong silently is
+-- a real risk. Basic Salary carries no such risk — the amount is always
+-- entered per employee regardless.
+INSERT INTO payroll_parameter_categories (name, category_type) VALUES
+    ('Earnings', 'Earning'),
+    ('Deductions', 'Deduction');
+
+INSERT INTO payroll_parameters (name, parameter_category_id) VALUES
+    ('Basic Salary', (SELECT parameter_category_id FROM payroll_parameter_categories WHERE name = 'Earnings'));
+
 -- ── Module: Lab ──────────────────────────────────────────────────────────
 -- Source: tbltests, tblmedreqtests, tblmedreqtestitems
 -- Note: the original also has tbltestcomponents (structured component-level

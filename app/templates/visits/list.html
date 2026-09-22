@@ -45,6 +45,8 @@
                     {% endif %}
                 </td>
                 <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('queue.join', visit_id=v.visit_id) }}"
+                       class="text-ink/70 hover:text-ink font-medium mr-3">Queue</a>
                     <a href="{{ url_for('nursing.new_triage', visit_id=v.visit_id) }}"
                        class="text-ink/70 hover:text-ink font-medium mr-3">Triage</a>
                     {% if v.is_processed %}

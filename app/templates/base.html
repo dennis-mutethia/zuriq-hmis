@@ -74,6 +74,7 @@
             <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
                 <div class="nav-section-label px-3 text-xs font-medium uppercase tracking-wide text-muted/70 mb-1">Overview</div>
                 {{ nav_link('dashboard.home', 'Dashboard', 'grid') }}
+                {{ nav_link('queue.board', 'Queue', 'queue') }}
                 {{ nav_link('reports.home', 'Reports', 'chart') }}
 
                 <div class="nav-section-label px-3 text-xs font-medium uppercase tracking-wide text-muted/70 mt-4 mb-1">Care</div>
@@ -87,6 +88,7 @@
                 <div class="nav-section-label px-3 text-xs font-medium uppercase tracking-wide text-muted/70 mt-4 mb-1">Finance</div>
                 {{ nav_link('billing.list_bills', 'Billing', 'receipt') }}
                 {{ nav_link('billing.list_services', 'Services', 'tag') }}
+                {{ nav_link('accounts.list_vouchers', 'Accounts', 'ledger') }}
 
                 {% if current_user.is_authenticated and current_user.is_admin %}
                 <div class="nav-section-label px-3 text-xs font-medium uppercase tracking-wide text-muted/70 mt-4 mb-1">Admin</div>

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}New Journal Voucher — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">New Journal Voucher</h1>
+
+{% if not acc_sub_accs %}
+<div class="bg-warn/10 border border-warn/20 text-warn rounded-lg px-4 py-3 text-sm mb-6">
+    No sub-accounts are linked to any account yet. Set up your
+    <a href="{{ url_for('accounts.chart_of_accounts') }}" class="underline font-medium">Chart of Accounts</a> and
+    <a href="{{ url_for('accounts.list_sub_accounts') }}" class="underline font-medium">Sub-Accounts</a> first.
+</div>
+{% endif %}
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-3xl space-y-6">
+    <div>
+        <label class="block text-sm text-muted mb-1">Description *</label>
+        <input name="description" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Source Reference</label>
+        <input name="source_reference" placeholder="e.g. Bill ZH-MB-42" class="w-full sm:w-80 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+
+    <div id="line-items" class="space-y-3">
+        <div class="grid grid-cols-12 gap-3 text-xs font-semibold text-muted uppercase px-1">
+            <div class="col-span-6">Account / Sub-Account</div>
+            <div class="col-span-2">Type</div>
+            <div class="col-span-3">Amount (KES)</div>
+            <div class="col-span-1"></div>
+        </div>
+        {% for i in range(2) %}
+        <div class="line-item grid grid-cols-12 gap-3">
+            <select name="acc_sub_acc_id" class="col-span-6 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+                <option value="">— Select —</option>
+                {% for asa in acc_sub_accs %}
+                <option value="{{ asa.acc_sub_acc_id }}">{{ asa.display_name }}</option>
+                {% endfor %}
+            </select>
+            <select name="entry_type" class="col-span-2 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+                <option value="Debit" {% if i == 0 %}selected{% endif %}>Debit</option>
+                <option value="Credit" {% if i == 1 %}selected{% endif %}>Credit</option>
+            </select>
+            <input type="number" step="0.01" min="0" name="amount" class="col-span-3 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <button type="button" onclick="removeLine(this)" class="col-span-1 text-sm text-danger hover:text-danger/80">✕</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" onclick="addLine()" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
+        + Add line
+    </button>
+
+    <p class="text-xs text-muted/60">Total debits must equal total credits — this is checked before saving.</p>
+
+    <div class="flex items-center gap-3 pt-4 border-t border-ink/10">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Post Voucher
+        </button>
+        <a href="{{ url_for('accounts.list_vouchers') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+<template id="line-template">
+    <div class="line-item grid grid-cols-12 gap-3">
+        <select name="acc_sub_acc_id" class="col-span-6 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <option value="">— Select —</option>
+            {% for asa in acc_sub_accs %}
+            <option value="{{ asa.acc_sub_acc_id }}">{{ asa.display_name }}</option>
+            {% endfor %}
+        </select>
+        <select name="entry_type" class="col-span-2 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <option value="Debit">Debit</option>
+            <option value="Credit">Credit</option>
+        </select>
+        <input type="number" step="0.01" min="0" name="amount" class="col-span-3 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <button type="button" onclick="removeLine(this)" class="col-span-1 text-sm text-danger hover:text-danger/80">✕</button>
+    </div>
+</template>
+
+<script>
+function addLine() {
+    const tpl = document.getElementById('line-template');
+    document.getElementById('line-items').appendChild(tpl.content.cloneNode(true));
+}
+function removeLine(btn) {
+    const items = document.querySelectorAll('.line-item');
+    if (items.length > 2) btn.closest('.line-item').remove();
+}
+</script>
+
+{% endblock %}

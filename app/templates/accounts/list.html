@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Accounts — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Journal Vouchers</h1>
+    <div class="flex items-center gap-4">
+        <a href="{{ url_for('accounts.chart_of_accounts') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Chart of Accounts</a>
+        <a href="{{ url_for('accounts.list_sub_accounts') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Sub-Accounts</a>
+        <a href="{{ url_for('accounts.new_voucher') }}"
+           class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+            + New Voucher
+        </a>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Description</th>
+                <th class="px-4 py-3">Reference</th>
+                <th class="px-4 py-3 text-right">Amount</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for v in vouchers %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 text-muted">{{ v.transaction_datetime.strftime("%d %b %Y %H:%M") }}</td>
+                <td class="px-4 py-3 font-medium">{{ v.description }}</td>
+                <td class="px-4 py-3 text-muted">{{ v.source_reference or "—" }}</td>
+                <td class="px-4 py-3 text-right font-mono">{{ "%.2f"|format(v.total_debit) }}</td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('accounts.view_voucher', journal_voucher_id=v.journal_voucher_id) }}"
+                       class="text-brand-600 hover:text-brand-700 font-medium">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-muted/60">No journal vouchers yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

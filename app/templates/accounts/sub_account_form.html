@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Add Sub-Account — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Add Sub-Account</h1>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-md space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Name *</label>
+        <input name="name" required placeholder="e.g. Cash, M-Pesa Till, NHIF Receivable"
+               class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Sub-Account
+        </button>
+        <a href="{{ url_for('accounts.list_sub_accounts') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+<p class="text-xs text-muted/60 mt-4">
+    After saving, you'll need to link it to an account in the Chart of Accounts before it can be used in a journal voucher.
+</p>
+
+{% endblock %}

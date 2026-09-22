@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Rooms — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Queue{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Rooms</h1>
+    <a href="{{ url_for('queue.new_room') }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+        + Add Room
+    </a>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <tbody class="divide-y divide-ink/5">
+            {% for r in rooms %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ r.name }}</td>
+            </tr>
+            {% else %}
+            <tr><td class="px-4 py-8 text-center text-muted/60">No rooms yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

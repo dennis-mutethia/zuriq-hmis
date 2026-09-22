@@ -23,6 +23,8 @@ before it.
 | 10 | `migration_add_stock_movements.sql` | #5 | `stock_movements` |
 | 11 | `migration_add_suppliers.sql` | #10 | `suppliers`, links to `stock_movements` |
 | 12 | `migration_add_nursing.sql` | #2, #4 | `nurse_triage`, `observation_charts` |
+| 13 | `migration_add_queue.sql` | #2 | `rooms`, `queue_entries` (seeds 6 default rooms) |
+| 14 | `migration_add_general_ledger.sql` | `system_users` table already exists | `account_types`, `accounts`, `sub_accounts`, `account_sub_accounts`, `fiscal_periods`, `journal_vouchers`, `subaccount_entries` (seeds 5 account types) |
 
 **Skip `migration_add_roles.sql` entirely** if you haven't already run it —
 `migration_roles_table.sql` (step 9) supersedes it and does the equivalent

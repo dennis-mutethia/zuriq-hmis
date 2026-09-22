@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Add Room — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Queue{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Add Room</h1>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-md space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Room Name *</label>
+        <input name="name" required autofocus class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm" placeholder="e.g. Consultation Room 2">
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Room
+        </button>
+        <a href="{{ url_for('queue.list_rooms') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

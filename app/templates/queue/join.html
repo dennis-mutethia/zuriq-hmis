@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Join Queue — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Queue{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Add to Queue</h1>
+
+<div class="bg-white rounded-xl border border-ink/10 p-4 mb-6">
+    <div class="font-semibold text-ink">{{ patient.full_name }}</div>
+    <div class="text-sm text-muted">OP: <span class="font-mono">{{ patient.out_patient_no }}</span></div>
+</div>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-md">
+    <label class="block text-sm text-muted mb-2">Send to which room?</label>
+    <div class="space-y-2 mb-6">
+        {% for room in rooms %}
+        <label class="flex items-center gap-3 border border-ink/10 rounded-lg px-3 py-2 text-sm hover:bg-canvas/60 cursor-pointer">
+            <input type="radio" name="to_room_id" value="{{ room.room_id }}" required class="border-ink/20">
+            <span class="font-medium">{{ room.name }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    <div class="flex items-center gap-3">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Add to Queue
+        </button>
+        <a href="{{ url_for('visits.list_visits') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

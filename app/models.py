@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
@@ -147,6 +148,155 @@ class Visit(db.Model):
 
     patient = db.relationship("Patient")
     clinic = db.relationship("Clinic")
+
+
+class AccountType(db.Model):
+    __tablename__ = "account_types"
+    account_type_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+
+class Account(db.Model):
+    __tablename__ = "accounts"
+    account_id = db.Column(db.Integer, primary_key=True)
+    account_no = db.Column(db.Text, nullable=False, unique=True)
+    name = db.Column(db.Text, nullable=False)
+    account_type_id = db.Column(db.Integer, db.ForeignKey("account_types.account_type_id"), nullable=False)
+
+    account_type = db.relationship("AccountType")
+
+
+class SubAccount(db.Model):
+    __tablename__ = "sub_accounts"
+    sub_account_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+
+    links = db.relationship("AccountSubAccount", backref="sub_account_obj", overlaps="sub_account")
+
+
+class AccountSubAccount(db.Model):
+    __tablename__ = "account_sub_accounts"
+    acc_sub_acc_id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("accounts.account_id"), nullable=False)
+    sub_account_id = db.Column(db.Integer, db.ForeignKey("sub_accounts.sub_account_id"), nullable=False)
+
+    account = db.relationship("Account")
+    sub_account = db.relationship("SubAccount")
+
+    @property
+    def display_name(self):
+        return f"{self.account.account_no} — {self.account.name} / {self.sub_account.name}"
+
+
+class FiscalPeriod(db.Model):
+    __tablename__ = "fiscal_periods"
+    fiscal_period_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_closed = db.Column(db.Boolean, nullable=False, default=False)
+
+    @staticmethod
+    def get_or_create_current():
+        from datetime import date
+        import calendar
+        today = date.today()
+        period = FiscalPeriod.query.filter(
+            FiscalPeriod.start_date <= today, FiscalPeriod.end_date >= today
+        ).first()
+        if period:
+            return period
+        start = today.replace(day=1)
+        last_day = calendar.monthrange(today.year, today.month)[1]
+        end = today.replace(day=last_day)
+        period = FiscalPeriod(name=start.strftime("%B %Y"), start_date=start, end_date=end)
+        db.session.add(period)
+        db.session.flush()
+        return period
+
+
+class JournalVoucher(db.Model):
+    __tablename__ = "journal_vouchers"
+
+    journal_voucher_id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.Text, nullable=False)
+    transaction_datetime = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    source_reference = db.Column(db.Text)
+    fiscal_period_id = db.Column(db.Integer, db.ForeignKey("fiscal_periods.fiscal_period_id"))
+    created_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+
+    fiscal_period = db.relationship("FiscalPeriod")
+    created_by_user = db.relationship("SystemUser")
+    entries = db.relationship("SubaccountEntry", backref="journal_voucher", cascade="all, delete-orphan")
+
+    @property
+    def total_debit(self):
+        return sum((e.amount for e in self.entries if e.entry_type == "Debit"), Decimal("0"))
+
+    @property
+    def total_credit(self):
+        return sum((e.amount for e in self.entries if e.entry_type == "Credit"), Decimal("0"))
+
+    @property
+    def is_balanced(self):
+        return self.total_debit == self.total_credit
+
+
+class SubaccountEntry(db.Model):
+    __tablename__ = "subaccount_entries"
+
+    subaccount_entry_id = db.Column(db.Integer, primary_key=True)
+    journal_voucher_id = db.Column(db.Integer, db.ForeignKey("journal_vouchers.journal_voucher_id"), nullable=False)
+    acc_sub_acc_id = db.Column(db.Integer, db.ForeignKey("account_sub_accounts.acc_sub_acc_id"), nullable=False)
+    entry_type = db.Column(db.Text, nullable=False)
+    amount = db.Column(db.Numeric(14, 2), nullable=False)
+    transaction_datetime = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    fiscal_period_id = db.Column(db.Integer, db.ForeignKey("fiscal_periods.fiscal_period_id"))
+
+    acc_sub_acc = db.relationship("AccountSubAccount")
+
+
+class Room(db.Model):
+    __tablename__ = "rooms"
+    room_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+
+class QueueEntry(db.Model):
+    __tablename__ = "queue_entries"
+
+    queue_entry_id = db.Column(db.Integer, primary_key=True)
+    visit_id = db.Column(db.Integer, db.ForeignKey("visits.visit_id"), nullable=False)
+    from_room_id = db.Column(db.Integer, db.ForeignKey("rooms.room_id"))
+    to_room_id = db.Column(db.Integer, db.ForeignKey("rooms.room_id"), nullable=False)
+    queued_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    called_at = db.Column(db.DateTime(timezone=True))
+    completed_at = db.Column(db.DateTime(timezone=True))
+    created_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+
+    visit = db.relationship("Visit", backref="queue_entries")
+    from_room = db.relationship("Room", foreign_keys=[from_room_id])
+    to_room = db.relationship("Room", foreign_keys=[to_room_id])
+
+    @property
+    def status(self):
+        if self.completed_at:
+            return "done"
+        if self.called_at:
+            return "in_service"
+        return "waiting"
+
+    @property
+    def waiting_minutes(self):
+        end = self.called_at or datetime.now(timezone.utc)
+        return int((end - self.queued_at).total_seconds() // 60)
+
+    @property
+    def service_minutes(self):
+        if not self.called_at:
+            return None
+        end = self.completed_at or datetime.now(timezone.utc)
+        return int((end - self.called_at).total_seconds() // 60)
 
 
 class NurseTriage(db.Model):

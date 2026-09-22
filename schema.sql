@@ -188,6 +188,104 @@ CREATE TABLE visits (
 CREATE INDEX idx_visits_patient_id ON visits (patient_id);
 CREATE INDEX idx_visits_visit_datetime ON visits (visit_datetime);
 
+-- ── Module: General Ledger (core of Accounts) ────────────────────────────
+-- Source: tblaccounttypes, tblaccounts, tblsubaccounts, tblaccsubacc,
+-- tbljournalvouchers, tblsubaccountentries. This is the double-entry
+-- bookkeeping foundation — Bank Deposits/Reconciliation
+-- (tblbankdeposits/tblbankrec) are a real, separate original module and
+-- deliberately not built here; see README.
+--
+-- EntryType was a magic 0/1 int in the original (1 = Debit, per the
+-- decompiled BaseClasses code) — modernized to a readable CHECK.
+
+CREATE TABLE account_types (
+    account_type_id  SERIAL PRIMARY KEY,
+    name              TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE accounts (
+    account_id       SERIAL PRIMARY KEY,
+    account_no        TEXT NOT NULL UNIQUE,
+    name               TEXT NOT NULL,
+    account_type_id     INTEGER NOT NULL REFERENCES account_types(account_type_id)
+);
+
+-- Sub-accounts are the actual sub-ledgers (e.g. "Cash", "M-Pesa Till",
+-- "NHIF Receivable") — each tagged under one or more control accounts via
+-- account_sub_accounts, matching the original's separate junction table
+-- rather than a direct FK (a sub-account can conceptually sit under more
+-- than one account over time).
+CREATE TABLE sub_accounts (
+    sub_account_id   SERIAL PRIMARY KEY,
+    name              TEXT NOT NULL
+);
+
+CREATE TABLE account_sub_accounts (
+    acc_sub_acc_id   SERIAL PRIMARY KEY,
+    account_id        INTEGER NOT NULL REFERENCES accounts(account_id),
+    sub_account_id      INTEGER NOT NULL REFERENCES sub_accounts(sub_account_id),
+    UNIQUE (account_id, sub_account_id)
+);
+
+CREATE TABLE fiscal_periods (
+    fiscal_period_id  SERIAL PRIMARY KEY,
+    name               TEXT NOT NULL,       -- e.g. 'January 2026'
+    start_date          DATE NOT NULL,
+    end_date             DATE NOT NULL,
+    is_closed             BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE journal_vouchers (
+    journal_voucher_id  SERIAL PRIMARY KEY,
+    description           TEXT NOT NULL,
+    transaction_datetime    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    source_reference          TEXT,          -- e.g. 'Bill ZH-MB-42' — free text link, not yet a real FK
+    fiscal_period_id           INTEGER REFERENCES fiscal_periods(fiscal_period_id),
+    created_by                   INTEGER REFERENCES system_users(system_user_id)
+);
+
+CREATE TABLE subaccount_entries (
+    subaccount_entry_id  SERIAL PRIMARY KEY,
+    journal_voucher_id     INTEGER NOT NULL REFERENCES journal_vouchers(journal_voucher_id) ON DELETE CASCADE,
+    acc_sub_acc_id           INTEGER NOT NULL REFERENCES account_sub_accounts(acc_sub_acc_id),
+    entry_type                 TEXT NOT NULL CHECK (entry_type IN ('Debit', 'Credit')),
+    amount                       NUMERIC(14,2) NOT NULL CHECK (amount > 0),
+    transaction_datetime           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    fiscal_period_id                 INTEGER REFERENCES fiscal_periods(fiscal_period_id)
+);
+
+CREATE INDEX idx_subaccount_entries_journal_voucher_id ON subaccount_entries (journal_voucher_id);
+CREATE INDEX idx_subaccount_entries_acc_sub_acc_id ON subaccount_entries (acc_sub_acc_id);
+
+INSERT INTO account_types (name) VALUES ('Asset'), ('Liability'), ('Equity'), ('Income'), ('Expense');
+
+-- ── Module: Queue Management ─────────────────────────────────────────────
+-- Source: tbltempqueue. The original stores room names as free text and
+-- waiting/service/total time as separately-stored integers (computed once,
+-- never re-derived — can drift from the actual timestamps). Modernized:
+-- rooms is a proper lookup table, and times are computed from timestamps
+-- in the app layer rather than stored redundantly.
+
+CREATE TABLE rooms (
+    room_id    SERIAL PRIMARY KEY,
+    name       TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE queue_entries (
+    queue_entry_id  SERIAL PRIMARY KEY,
+    visit_id          INTEGER NOT NULL REFERENCES visits(visit_id),
+    from_room_id       INTEGER REFERENCES rooms(room_id),   -- null if this is their first stop
+    to_room_id          INTEGER NOT NULL REFERENCES rooms(room_id),
+    queued_at            TIMESTAMPTZ NOT NULL DEFAULT now(), -- joined this room's queue
+    called_at             TIMESTAMPTZ,                        -- staff called them in
+    completed_at           TIMESTAMPTZ,                        -- service finished, room freed
+    created_by              INTEGER REFERENCES system_users(system_user_id)
+);
+
+CREATE INDEX idx_queue_entries_visit_id ON queue_entries (visit_id);
+CREATE INDEX idx_queue_entries_to_room_id ON queue_entries (to_room_id);
+CREATE INDEX idx_queue_entries_active ON queue_entries (to_room_id) WHERE completed_at IS NULL;
+
 -- ── Module: Nursing / Vitals ─────────────────────────────────────────────
 -- Source: tblnursetriage (OPD, one per visit), tblobservationcharts
 -- (inpatient, repeated readings during an admission). These are two
@@ -476,3 +574,7 @@ CREATE INDEX idx_lab_request_items_lab_request_id ON lab_request_items (lab_requ
 -- Uncomment and adjust to your context before running, or add via the app later.
 
 -- INSERT INTO id_types (id_type) VALUES ('National ID'), ('Passport'), ('Birth Certificate');
+
+-- A reasonable starting set of rooms for Queue Management — edit/add more via /queue/rooms.
+INSERT INTO rooms (name) VALUES
+    ('Reception'), ('Triage'), ('Consultation'), ('Lab'), ('Pharmacy'), ('Billing');

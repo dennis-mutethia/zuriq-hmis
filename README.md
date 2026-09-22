@@ -263,6 +263,96 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## Accounts — General Ledger (core)
+
+Source: `tblaccounttypes`, `tblaccounts`, `tblsubaccounts`, `tblaccsubacc`,
+`tbljournalvouchers`, `tblsubaccountentries`. This is real double-entry
+bookkeeping, not a simplification — the original's own structure already
+separates a chart of accounts (control accounts) from sub-accounts (actual
+ledgers like "Cash" or "M-Pesa Till"), linked via a junction table so a
+sub-account isn't hardcoded to one control account.
+
+**One thing modernized rather than copied exactly:** `EntryType` was a
+magic `0`/`1` integer in the original (1 = Debit, found by reading the
+actual comparison logic in the decompiled BaseClasses — nothing in the
+schema itself said which was which). Replaced with a readable
+`CHECK (entry_type IN ('Debit', 'Credit'))`.
+
+**Setup order** (this module has real dependencies you must set up before
+it's usable):
+1. **Chart of Accounts** (`/accounts/chart`) — add control accounts (e.g.
+   `1000 — Current Assets`, type `Asset`)
+2. **Sub-Accounts** (`/accounts/sub-accounts`) — add actual ledgers (e.g.
+   `Cash`, `M-Pesa Till`), then **link** each to a Chart of Accounts entry
+3. **New Journal Voucher** (`/accounts`) — post an entry: description,
+   optional reference, and at least one debit line + one credit line.
+   **Debits must equal credits or it won't save** — this is checked in
+   the route, not just the UI.
+4. **Ledger view** — from any sub-account, see every entry against it with
+   a running balance
+
+**Fiscal periods are automatic** — `FiscalPeriod.get_or_create_current()`
+finds or creates the current calendar-month period the first time you post
+a voucher in it. No manual period setup needed, though `/accounts/periods`
+shows the history.
+
+Run `migrations/migration_add_general_ledger.sql` on an existing database,
+or `schema.sql` for fresh installs (both seed the five account types:
+Asset, Liability, Equity, Income, Expense).
+
+### What's intentionally deferred (Accounts)
+
+- **Bank Deposits & Reconciliation** — `tblbankdeposits`/`tblbankrec` are a
+  real, separate original module (matching a bank statement against book
+  balances) and genuinely weren't built here. This GL core is the
+  foundation it would sit on top of.
+- **Automatic posting from Billing/Pharmacy/Lab** — recording a bill
+  payment does not create a journal voucher yet. The two systems are
+  parallel right now, not integrated. Wiring "cash sale → Debit Cash,
+  Credit Revenue" automatically is a real design decision (which accounts,
+  which sub-accounts) that shouldn't be invented silently — flag it
+  explicitly when you're ready for that.
+- **Closing periods** — `fiscal_periods.is_closed` exists but nothing sets
+  it or blocks entries into a closed period.
+- **Trial balance / financial statements** — the original has dedicated
+  reports for this (`tbltrialbalance` referenced in the decompiled source);
+  not built. The per-sub-account ledger view is the closest equivalent
+  right now.
+- **HR/Payroll's own accounting** — `tblemployeepayrollparameter` etc. are
+  a separate untouched module; this GL core doesn't post payroll entries.
+
+## Queue Management
+
+Source: `tbltempqueue`. Modernized two things rather than copying the
+original structure exactly:
+
+- **Rooms are a proper lookup table**, not free text — the original
+  stored `FromRoom`/`ToRoom` as plain strings, which means two staff
+  members typing "Lab" vs "lab" would never match in a report.
+- **Wait/service times are computed from timestamps**, not stored as
+  separate integers — the original calculated `WaitingTime`/`ServiceTime`
+  once and stored them, which can silently go stale. Here they're derived
+  live from `queued_at`/`called_at`/`completed_at` every time they're
+  shown.
+
+**`/queue`** — the live board: every room as a column, patients currently
+waiting or in service, with "Call In" and "Mark Done" actions. **"Queue"**
+from the Visits list sends a patient to a specific room's line — it
+tracks which room they came from automatically (their previous stop),
+building an implicit trail of where they've been today. `/queue/rooms` —
+simple admin to add rooms; six are seeded by default (Reception, Triage,
+Consultation, Lab, Pharmacy, Billing).
+
+Run `migrations/migration_add_queue.sql` on an existing database, or
+`schema.sql` for fresh installs (both seed the default rooms).
+
+### What's intentionally deferred (Queue)
+
+- **Multi-branch/multi-room-type routing rules** — no logic suggesting
+  "where should this patient go next"; staff pick manually every time.
+- **Queue analytics** — no average-wait-time reporting yet; the per-entry
+  minutes shown on the board aren't aggregated anywhere in Reports.
+
 ## Nursing / Vitals
 
 The original app has two distinct workflows here, not one generic "vitals"

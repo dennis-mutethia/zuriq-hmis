@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Add Account — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Add Account</h1>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-md space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Account No. *</label>
+        <input name="account_no" required placeholder="e.g. 1000" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Name *</label>
+        <input name="name" required placeholder="e.g. Current Assets" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Type *</label>
+        <select name="account_type_id" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            {% for t in account_types %}
+            <option value="{{ t.account_type_id }}">{{ t.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Account
+        </button>
+        <a href="{{ url_for('accounts.chart_of_accounts') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

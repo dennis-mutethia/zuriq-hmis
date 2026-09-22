@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Queue — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Queue{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Queue Board</h1>
+    <a href="{{ url_for('queue.list_rooms') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
+        Manage Rooms
+    </a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+    {% for room in rooms %}
+    {% set entries = by_room.get(room.room_id, []) %}
+    <div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+        <div class="px-4 py-3 border-b border-ink/10 flex items-center justify-between">
+            <h2 class="font-semibold text-ink">{{ room.name }}</h2>
+            <span class="text-xs font-mono text-muted">{{ entries|length }}</span>
+        </div>
+        <div class="divide-y divide-ink/5">
+            {% for e in entries %}
+            <div class="px-4 py-3">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="font-medium text-sm">{{ e.visit.patient.full_name }}</span>
+                    {% if e.status == 'waiting' %}
+                    <span class="text-xs bg-warn/10 text-warn px-2 py-0.5 rounded-full">Waiting {{ e.waiting_minutes }}m</span>
+                    {% else %}
+                    <span class="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full">In service {{ e.service_minutes }}m</span>
+                    {% endif %}
+                </div>
+                <div class="text-xs text-muted font-mono mb-2">{{ e.visit.patient.out_patient_no or "—" }}</div>
+                <div class="flex gap-2">
+                    {% if e.status == 'waiting' %}
+                    <form method="post" action="{{ url_for('queue.call', queue_entry_id=e.queue_entry_id) }}">
+                        <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-1 rounded-md">Call In</button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="{{ url_for('queue.complete', queue_entry_id=e.queue_entry_id) }}">
+                        <button type="submit" class="text-xs bg-canvas hover:bg-ink/10 text-ink px-3 py-1 rounded-md">Mark Done</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="px-4 py-6 text-center text-muted/60 text-sm">Empty</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="col-span-full bg-white rounded-xl border border-ink/10 p-8 text-center text-muted/60">
+        No rooms set up yet — <a href="{{ url_for('queue.new_room') }}" class="text-brand-600 hover:underline">add one</a>.
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

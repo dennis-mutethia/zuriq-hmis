@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Sub-Accounts — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Sub-Accounts</h1>
+    <a href="{{ url_for('accounts.new_sub_account') }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+        + Add Sub-Account
+    </a>
+</div>
+
+<p class="text-sm text-muted mb-4">
+    A sub-account is a specific ledger (e.g. "Cash", "M-Pesa Till", "NHIF Receivable") —
+    link each one to a Chart of Accounts entry before using it in a journal voucher.
+</p>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">Linked Accounts</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for s in sub_accounts %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ s.name }}</td>
+                <td class="px-4 py-3 text-muted">
+                    {% if s.links %}
+                    {{ s.links|map(attribute='account.account_no')|join(', ') }}
+                    {% else %}
+                    <span class="text-warn">Not linked yet</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('accounts.link_sub_account', sub_account_id=s.sub_account_id) }}"
+                       class="text-brand-600 hover:text-brand-700 font-medium">Link to Account</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="px-4 py-8 text-center text-muted/60">No sub-accounts yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

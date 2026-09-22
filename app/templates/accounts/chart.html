@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Chart of Accounts — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Chart of Accounts</h1>
+    <a href="{{ url_for('accounts.new_account') }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+        + Add Account
+    </a>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Account No.</th>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">Type</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for a in accounts %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-mono font-medium">{{ a.account_no }}</td>
+                <td class="px-4 py-3">{{ a.name }}</td>
+                <td class="px-4 py-3 text-muted">{{ a.account_type.name }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="px-4 py-8 text-center text-muted/60">No accounts yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

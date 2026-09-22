@@ -3,14 +3,14 @@
 {% block breadcrumb %}Queue{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
+<div class="zh-action-row mb-6">
     <h1 class="text-2xl font-semibold text-ink">Queue Board</h1>
     <a href="{{ url_for('queue.list_rooms') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
         Manage Rooms
     </a>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+<div class="zh-card-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
     {% for room in rooms %}
     {% set entries = by_room.get(room.room_id, []) %}
     <div class="bg-white rounded-xl border border-ink/10 overflow-hidden">

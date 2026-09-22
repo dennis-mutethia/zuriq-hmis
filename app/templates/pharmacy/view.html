@@ -3,7 +3,7 @@
 {% block breadcrumb %}Pharmacy{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
+<div class="zh-action-row mb-6">
     <div>
         <h1 class="text-2xl font-semibold text-ink">{{ prescription.patient.full_name }}</h1>
         <p class="text-sm text-muted">OP: <span class="font-mono">{{ prescription.patient.out_patient_no }}</span> · {{ prescription.created_at.strftime("%d %b %Y %H:%M") }}
@@ -22,7 +22,7 @@
 </div>
 {% endif %}
 
-<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+<div class="bg-white rounded-xl border border-ink/10 overflow-x-auto">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">
             <tr>

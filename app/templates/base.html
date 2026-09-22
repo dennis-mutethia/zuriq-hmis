@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Zuriq-HMIS{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <meta name="theme-color" content="#0F6B5C">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,21 +38,121 @@
     </script>
 
     <style>
-        /* Sidebar collapse: plain CSS so the stored preference can be applied
-           synchronously before paint, with no flash of the wrong width. */
-        .sidebar { width: 17rem; transition: width 150ms ease; }
+        :root {
+            --zh-shadow: 0 12px 32px rgba(22, 35, 31, .06);
+            --zh-shadow-hover: 0 18px 42px rgba(22, 35, 31, .10);
+            --zh-radius: 1rem;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            background:
+                radial-gradient(circle at 100% 0%, rgba(29,136,116,.07), transparent 28rem),
+                #F6F5F1;
+        }
+        .sidebar {
+            width: 17rem;
+            transition: width 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+            background: rgba(255,255,255,.94);
+            backdrop-filter: blur(18px);
+            box-shadow: 10px 0 35px rgba(22,35,31,.035);
+        }
         html.sb-collapsed .sidebar { width: 4.75rem; }
         html.sb-collapsed .sidebar .nav-label,
         html.sb-collapsed .sidebar .brand-word,
         html.sb-collapsed .sidebar .nav-section-label { display: none; }
         html.sb-collapsed .sidebar .nav-item { justify-content: center; }
+        .sidebar .nav-item { transition: background-color .16s ease, color .16s ease, transform .16s ease; }
+        .sidebar .nav-item:hover { transform: translateX(2px); }
+        .sidebar > div:first-child {
+            background: linear-gradient(135deg, rgba(15,107,92,.06), transparent);
+        }
+        header {
+            background: rgba(255,255,255,.82) !important;
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+        main {
+            max-width: 92rem !important;
+            margin-inline: auto;
+        }
+        main > * { min-width: 0; }
+        main h1 { letter-spacing: -.025em; }
+        main .bg-white.rounded-xl {
+            box-shadow: var(--zh-shadow);
+            transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+        }
+        main .bg-white.rounded-xl:hover {
+            border-color: rgba(15,107,92,.16);
+        }
+        main input, main select, main textarea {
+            background: rgba(255,255,255,.92);
+            transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+        }
+        main input:focus, main select:focus, main textarea:focus {
+            background: #fff;
+        }
+        main button, main a[class*="bg-brand"], main a[class*="bg-canvas"] {
+            transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease;
+        }
+        main a[class*="bg-brand"]:hover, main button[class*="bg-brand"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(15,107,92,.16);
+        }
+        main table { border-collapse: separate; border-spacing: 0; }
+        main table thead th { white-space: nowrap; font-weight: 600; letter-spacing: .04em; }
+        main table tbody tr { transition: background-color .14s ease; }
+        main table tbody td { vertical-align: middle; }
+        main .grid { min-width: 0; }
+        .zh-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        .zh-table-wrap table { min-width: 42rem; }
+        .zh-table-wrap::-webkit-scrollbar { height: 8px; }
+        .zh-table-wrap::-webkit-scrollbar-thumb { background: rgba(22,35,31,.18); border-radius: 999px; }
+        .zh-action-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+        .zh-action-links { display: flex; align-items: center; gap: .75rem 1rem; flex-wrap: wrap; }
+        .zh-card-grid > * { min-width: 0; }
+        .zh-stat { position: relative; overflow: hidden; }
+        .zh-stat::after {
+            content: "";
+            position: absolute; width: 7rem; height: 7rem; right: -3rem; top: -3rem;
+            border-radius: 999px; background: rgba(29,136,116,.07);
+        }
+        .backdrop { backdrop-filter: blur(3px); }
 
+        @media (max-width: 1024px) {
+            main { padding-inline: 1.25rem !important; }
+        }
         @media (max-width: 768px) {
-            .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; transform: translateX(-100%); width: 17rem !important; }
+            .sidebar {
+                position: fixed; inset: 0 auto 0 0; z-index: 40;
+                transform: translateX(-105%); width: 17rem !important;
+                box-shadow: 18px 0 45px rgba(22,35,31,.16);
+            }
             .sidebar .nav-label, .sidebar .brand-word, .sidebar .nav-section-label { display: block !important; }
             .sidebar .nav-item { justify-content: flex-start !important; }
             html.mobile-nav-open .sidebar { transform: translateX(0); }
             html.mobile-nav-open .backdrop { display: block; }
+            header { padding-inline: .9rem !important; }
+            main { padding: 1.25rem .9rem 2rem !important; }
+            main h1.text-2xl { font-size: 1.5rem; line-height: 1.25; }
+            .zh-action-row { align-items: stretch; }
+            .zh-action-row > * { max-width: 100%; }
+            .zh-action-links { width: 100%; }
+            .zh-action-links > a { flex: 1 1 auto; }
+            .zh-table-wrap table { min-width: 38rem; }
+        }
+        @media (max-width: 520px) {
+            .zh-action-links { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+            .zh-action-links > a { text-align: center; }
+            main .grid { gap: .75rem; }
+            main .bg-white.rounded-xl { border-radius: .85rem; }
+            .zh-table-wrap table { min-width: 34rem; }
         }
     </style>
     <script>
@@ -129,7 +231,7 @@
                 <div class="text-sm text-muted">{% block breadcrumb %}{% endblock %}</div>
             </header>
 
-            <main class="flex-1 px-4 md:px-8 py-6 md:py-8 max-w-6xl w-full">
+            <main class="flex-1 px-4 md:px-8 py-6 md:py-8 w-full">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                   {% if messages %}
                     {% for category, message in messages %}

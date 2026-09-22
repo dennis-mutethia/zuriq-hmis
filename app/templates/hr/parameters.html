@@ -3,9 +3,9 @@
 {% block breadcrumb %}HR{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
+<div class="zh-action-row mb-6">
     <h1 class="text-2xl font-semibold text-ink">Payroll Parameters</h1>
-    <div class="flex items-center gap-4">
+    <div class="zh-action-links">
         <a href="{{ url_for('hr.new_parameter_category') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">+ Add Category</a>
         <a href="{{ url_for('hr.new_parameter') }}" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">+ Add Parameter</a>
     </div>

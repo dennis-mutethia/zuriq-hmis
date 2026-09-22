@@ -3,7 +3,7 @@
 {% block breadcrumb %}Accounts{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
+<div class="zh-action-row mb-6">
     <h1 class="text-2xl font-semibold text-ink">Sub-Accounts</h1>
     <a href="{{ url_for('accounts.new_sub_account') }}"
        class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
@@ -16,7 +16,7 @@
     link each one to a Chart of Accounts entry before using it in a journal voucher.
 </p>
 
-<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+<div class="bg-white rounded-xl border border-ink/10 overflow-x-auto">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">
             <tr>

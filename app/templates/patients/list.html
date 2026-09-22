@@ -3,7 +3,7 @@
 {% block breadcrumb %}Patients{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
+<div class="zh-action-row mb-6">
     <h1 class="text-2xl font-semibold text-ink">Patients</h1>
     <a href="{{ url_for('patients.new_patient') }}"
        class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
@@ -16,7 +16,7 @@
            class="w-full sm:w-96 border border-ink/15 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
 </form>
 
-<div class="bg-white rounded-xl shadow-sm border border-ink/10 overflow-hidden">
+<div class="bg-white rounded-xl shadow-sm border border-ink/10 overflow-x-auto">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">
             <tr>

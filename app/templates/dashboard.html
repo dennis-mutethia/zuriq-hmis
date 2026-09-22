@@ -6,20 +6,20 @@
 <h1 class="text-2xl font-semibold text-ink mb-1">Good day</h1>
 <p class="text-muted mb-8">Here's what's happening today.</p>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-    <div class="bg-white rounded-xl border border-ink/10 p-5">
+<div class="zh-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+    <div class="zh-stat bg-white rounded-xl border border-ink/10 p-5">
         <div class="text-sm text-muted mb-1">Total Patients</div>
         <div class="text-3xl font-semibold text-ink font-mono">{{ stats.total_patients }}</div>
     </div>
-    <div class="bg-white rounded-xl border border-ink/10 p-5">
+    <div class="zh-stat bg-white rounded-xl border border-ink/10 p-5">
         <div class="text-sm text-muted mb-1">Visits Today</div>
         <div class="text-3xl font-semibold text-ink font-mono">{{ stats.visits_today }}</div>
     </div>
-    <div class="bg-white rounded-xl border border-ink/10 p-5">
+    <div class="zh-stat bg-white rounded-xl border border-ink/10 p-5">
         <div class="text-sm text-muted mb-1">Pending Bills</div>
         <div class="text-3xl font-semibold text-warn font-mono">{{ stats.pending_bills }}</div>
     </div>
-    <div class="bg-white rounded-xl border border-ink/10 p-5">
+    <div class="zh-stat bg-white rounded-xl border border-ink/10 p-5">
         <div class="text-sm text-muted mb-1">Collected Today</div>
         <div class="text-3xl font-semibold text-success font-mono">KES {{ "%.0f"|format(stats.collected_today) }}</div>
     </div>
@@ -30,7 +30,7 @@
     <a href="{{ url_for('visits.list_visits') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">View all</a>
 </div>
 
-<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+<div class="bg-white rounded-xl border border-ink/10 overflow-x-auto">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">
             <tr>

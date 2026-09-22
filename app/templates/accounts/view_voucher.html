@@ -3,7 +3,7 @@
 {% block breadcrumb %}Accounts{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
+<div class="zh-action-row mb-6">
     <div>
         <h1 class="text-2xl font-semibold text-ink">{{ voucher.description }}</h1>
         <p class="text-sm text-muted">{{ voucher.transaction_datetime.strftime("%d %b %Y %H:%M") }}
@@ -17,7 +17,7 @@
     {% endif %}
 </div>
 
-<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+<div class="bg-white rounded-xl border border-ink/10 overflow-x-auto">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">
             <tr>

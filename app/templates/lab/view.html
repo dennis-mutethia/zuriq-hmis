@@ -3,7 +3,7 @@
 {% block breadcrumb %}Lab{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
+<div class="zh-action-row mb-6">
     <div>
         <h1 class="text-2xl font-semibold text-ink">{{ lab_request.patient.full_name }}</h1>
         <p class="text-sm text-muted">OP: <span class="font-mono">{{ lab_request.patient.out_patient_no }}</span> · Requested {{ lab_request.date_time_requested.strftime("%d %b %Y %H:%M") }}</p>

@@ -3,7 +3,7 @@
 {% block breadcrumb %}Lab{% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-6">
+<div class="zh-action-row mb-6">
     <h1 class="text-2xl font-semibold text-ink">Lab Requests</h1>
     <a href="{{ url_for('lab.list_tests') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">
         Manage Tests
@@ -21,7 +21,7 @@
     </a>
 </div>
 
-<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+<div class="bg-white rounded-xl border border-ink/10 overflow-x-auto">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">
             <tr>

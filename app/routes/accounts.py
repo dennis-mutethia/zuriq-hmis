@@ -109,7 +109,42 @@ def new_account():
         db.session.commit()
         flash(f"Account '{account.account_no} — {account.name}' created.", "success")
         return redirect(url_for("accounts.chart_of_accounts"))
-    return render_template("accounts/account_form.html", account_types=AccountType.query.order_by(AccountType.account_type_id).all())
+    return render_template("accounts/account_form.html", account=None, account_types=AccountType.query.order_by(AccountType.account_type_id).all())
+
+
+@accounts_bp.route("/chart/<int:account_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_account(account_id):
+    account = Account.query.get_or_404(account_id)
+    if request.method == "POST":
+        account.account_no = request.form["account_no"].strip()
+        account.name = request.form["name"].strip()
+        account.account_type_id = request.form["account_type_id"]
+        db.session.commit()
+        flash(f"Account '{account.account_no} — {account.name}' updated.", "success")
+        return redirect(url_for("accounts.chart_of_accounts"))
+    return render_template("accounts/account_form.html", account=account, account_types=AccountType.query.order_by(AccountType.account_type_id).all())
+
+
+# ── Account Types ────────────────────────────────────────────────────────
+
+@accounts_bp.route("/account-types")
+@login_required
+def list_account_types():
+    account_types = AccountType.query.order_by(AccountType.account_type_id).all()
+    return render_template("accounts/account_types.html", account_types=account_types)
+
+
+@accounts_bp.route("/account-types/<int:account_type_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_account_type(account_type_id):
+    account_type = AccountType.query.get_or_404(account_type_id)
+    if request.method == "POST":
+        account_type.name = request.form["name"].strip()
+        db.session.commit()
+        flash("Account type updated.", "success")
+        return redirect(url_for("accounts.list_account_types"))
+    return render_template("accounts/account_type_form.html", account_type=account_type)
 
 
 # ── Sub-Accounts ─────────────────────────────────────────────────────────
@@ -130,7 +165,19 @@ def new_sub_account():
         db.session.commit()
         flash(f"Sub-account '{sub_account.name}' created.", "success")
         return redirect(url_for("accounts.list_sub_accounts"))
-    return render_template("accounts/sub_account_form.html")
+    return render_template("accounts/sub_account_form.html", sub_account=None)
+
+
+@accounts_bp.route("/sub-accounts/<int:sub_account_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_sub_account(sub_account_id):
+    sub_account = SubAccount.query.get_or_404(sub_account_id)
+    if request.method == "POST":
+        sub_account.name = request.form["name"].strip()
+        db.session.commit()
+        flash(f"Sub-account '{sub_account.name}' updated.", "success")
+        return redirect(url_for("accounts.list_sub_accounts"))
+    return render_template("accounts/sub_account_form.html", sub_account=sub_account)
 
 
 @accounts_bp.route("/sub-accounts/<int:sub_account_id>/link", methods=["GET", "POST"])
@@ -199,7 +246,20 @@ def new_bank():
         db.session.commit()
         flash("Bank added.", "success")
         return redirect(url_for("accounts.list_banks"))
-    return render_template("accounts/bank_form.html")
+    return render_template("accounts/bank_form.html", bank=None)
+
+
+@accounts_bp.route("/banks/<int:bank_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_bank(bank_id):
+    bank = Bank.query.get_or_404(bank_id)
+    if request.method == "POST":
+        bank.name = request.form["name"].strip()
+        bank.bank_code = request.form.get("bank_code") or None
+        db.session.commit()
+        flash(f"Bank '{bank.name}' updated.", "success")
+        return redirect(url_for("accounts.list_banks"))
+    return render_template("accounts/bank_form.html", bank=bank)
 
 
 @accounts_bp.route("/banks/<int:bank_id>/branches/new", methods=["GET", "POST"])
@@ -215,7 +275,20 @@ def new_bank_branch(bank_id):
         db.session.commit()
         flash(f"Branch added to {bank.name}.", "success")
         return redirect(url_for("accounts.list_banks"))
-    return render_template("accounts/bank_branch_form.html", bank=bank)
+    return render_template("accounts/bank_branch_form.html", bank=bank, branch=None)
+
+
+@accounts_bp.route("/banks/branches/<int:bank_branch_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_bank_branch(bank_branch_id):
+    branch = BankBranch.query.get_or_404(bank_branch_id)
+    if request.method == "POST":
+        branch.name = request.form["name"].strip()
+        branch.branch_code = request.form.get("branch_code") or None
+        db.session.commit()
+        flash(f"Branch '{branch.name}' updated.", "success")
+        return redirect(url_for("accounts.list_banks"))
+    return render_template("accounts/bank_branch_form.html", bank=branch.bank, branch=branch)
 
 
 # ── Bank Deposits ─────────────────────────────────────────────────────────

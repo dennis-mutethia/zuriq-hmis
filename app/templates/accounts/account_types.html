@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Account Types — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Account Types</h1>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden max-w-md">
+    <table class="w-full text-sm text-left">
+        <tbody class="divide-y divide-ink/5">
+            {% for t in account_types %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ t.name }}</td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('accounts.edit_account_type', account_type_id=t.account_type_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Edit</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="px-4 py-8 text-center text-muted/60">No account types yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<p class="text-xs text-muted/60 mt-4">
+    These are the five standard accounting categories (Asset, Liability, Equity, Income, Expense) —
+    you can rename them, but there's no way to add or delete a category here since the Chart of
+    Accounts relies on all five existing.
+</p>
+
+{% endblock %}

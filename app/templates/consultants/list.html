@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Consultants — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Consultants{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Consultants</h1>
+    <a href="{{ url_for('consultants.new_consultant') }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+        + Add Consultant
+    </a>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">Designation</th>
+                <th class="px-4 py-3">Mobile</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for c in consultants %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ c.display_name }}{% if c.alias %}<span class="text-muted font-normal"> ({{ c.full_name }})</span>{% endif %}</td>
+                <td class="px-4 py-3 text-muted">{{ c.designation or "—" }}</td>
+                <td class="px-4 py-3 text-muted">{{ c.mobile_no or "—" }}</td>
+                <td class="px-4 py-3 text-right space-x-3">
+                    <a href="{{ url_for('consultants.edit_consultant', consultant_id=c.consultant_id) }}" class="text-muted hover:text-ink">Edit</a>
+                    <a href="{{ url_for('consultants.view_bookings', consultant_id=c.consultant_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Bookings</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="px-4 py-8 text-center text-muted/60">No consultants yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

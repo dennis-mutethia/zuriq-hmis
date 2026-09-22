@@ -16,11 +16,17 @@
     <div class="bg-white rounded-xl border border-ink/10 p-5">
         <div class="flex items-center justify-between mb-3">
             <h2 class="font-semibold text-ink">{{ bank.name }} {% if bank.bank_code %}<span class="text-muted font-mono text-sm">({{ bank.bank_code }})</span>{% endif %}</h2>
-            <a href="{{ url_for('accounts.new_bank_branch', bank_id=bank.bank_id) }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">+ Add Branch</a>
+            <div class="flex items-center gap-4 text-sm">
+                <a href="{{ url_for('accounts.edit_bank', bank_id=bank.bank_id) }}" class="text-muted hover:text-ink">Edit</a>
+                <a href="{{ url_for('accounts.new_bank_branch', bank_id=bank.bank_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">+ Add Branch</a>
+            </div>
         </div>
         <div class="flex flex-wrap gap-2">
             {% for branch in bank.branches %}
-            <span class="text-xs bg-canvas text-ink px-3 py-1.5 rounded-lg">{{ branch.name }}{% if branch.branch_code %} ({{ branch.branch_code }}){% endif %}</span>
+            <a href="{{ url_for('accounts.edit_bank_branch', bank_branch_id=branch.bank_branch_id) }}"
+               class="text-xs bg-canvas text-ink px-3 py-1.5 rounded-lg hover:bg-ink/10">
+                {{ branch.name }}{% if branch.branch_code %} ({{ branch.branch_code }}){% endif %}
+            </a>
             {% else %}
             <span class="text-sm text-muted/60">No branches yet.</span>
             {% endfor %}

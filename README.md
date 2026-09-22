@@ -263,6 +263,42 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## Consultants
+
+Source: `tblconsultants`, `tblconsultantsbookings`. `visits.is_consultant`
+has existed since the Visits module was first built, but nothing backed
+it — a specialist consultation and a regular OPD visit were
+indistinguishable beyond a checkbox, and "doctor" was always just free
+text. This adds the real entity:
+
+- **`/consultants`** — list, add, edit consultants (surname, other names,
+  an optional alias/display name, designation, mobile number)
+- **Booking** — search a patient, book them against a consultant with an
+  optional scheduled date/time; "Mark Seen" closes out a booking
+- **The Visit form now has a Consultant dropdown** next to the "Specialist
+  consultation" checkbox — `visits.consultant_id` links to the real
+  entity instead of relying on free text
+
+`visits.consultant_id` was added via `ALTER TABLE` rather than in the
+original `CREATE TABLE visits` — Visits is defined earlier in `schema.sql`
+than Consultants, so the column is added once the table it references
+exists, same pattern used elsewhere in this schema when a later module
+needs to reach back into an earlier table.
+
+Run `migrations/migration_add_consultants.sql` on an existing database,
+or `schema.sql` for fresh installs.
+
+### What's intentionally deferred (Consultants)
+
+- **Consultant billing** — `tblconsultantbills`/`tblconsultantbillitems`
+  model a revenue-share arrangement (the hospital takes a deduction, the
+  consultant is paid the net) that's a real, separate piece of work, not
+  built here. Right now a consultant's visits bill through the same
+  Billing module as everything else, with no revenue-share logic at all.
+- **Booking → Visit linkage** — a consultant booking and a visit are
+  separate records; booking someone doesn't automatically create their
+  visit, and seeing them doesn't automatically mark the booking.
+
 ## Banking — Deposits & Reconciliation
 
 Source: `tblbanks`, `tblbankbranch`, `tblbankdeposits`, `tblbankrec`,

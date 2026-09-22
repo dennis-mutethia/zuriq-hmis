@@ -121,6 +121,41 @@ class Patient(db.Model):
         return " ".join(p for p in parts if p)
 
 
+class Consultant(db.Model):
+    __tablename__ = "consultants"
+    consultant_id = db.Column(db.Integer, primary_key=True)
+    surname = db.Column(db.Text, nullable=False)
+    other_names = db.Column(db.Text, nullable=False)
+    alias = db.Column(db.Text)
+    designation = db.Column(db.Text)
+    mobile_no = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+    @property
+    def full_name(self):
+        return f"{self.surname} {self.other_names}"
+
+    @property
+    def display_name(self):
+        return self.alias or self.full_name
+
+
+class ConsultantBooking(db.Model):
+    __tablename__ = "consultant_bookings"
+
+    consultant_booking_id = db.Column(db.Integer, primary_key=True)
+    consultant_id = db.Column(db.Integer, db.ForeignKey("consultants.consultant_id"), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"), nullable=False)
+    visit_datetime = db.Column(db.DateTime(timezone=True))
+    datetime_booked = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    is_seen = db.Column(db.Boolean, nullable=False, default=False)
+    booked_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+
+    consultant = db.relationship("Consultant")
+    patient = db.relationship("Patient")
+    booked_by_user = db.relationship("SystemUser")
+
+
 class Clinic(db.Model):
     __tablename__ = "clinics"
     clinic_id = db.Column(db.Integer, primary_key=True)
@@ -144,10 +179,12 @@ class Visit(db.Model):
     is_processed = db.Column(db.Boolean, nullable=False, default=False)
     is_admitted = db.Column(db.Boolean, nullable=False, default=False)
     is_consultant = db.Column(db.Boolean, nullable=False, default=False)
+    consultant_id = db.Column(db.Integer, db.ForeignKey("consultants.consultant_id"))
     registered_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
 
     patient = db.relationship("Patient")
     clinic = db.relationship("Clinic")
+    consultant = db.relationship("Consultant")
 
 
 class Department(db.Model):

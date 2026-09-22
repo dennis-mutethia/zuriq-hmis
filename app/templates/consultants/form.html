@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if consultant else "Add" }} Consultant — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Consultants{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">{{ "Edit Consultant" if consultant else "Add Consultant" }}</h1>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-lg space-y-4">
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">Surname *</label>
+            <input name="surname" required value="{{ (consultant and consultant.surname) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Other Names *</label>
+            <input name="other_names" required value="{{ (consultant and consultant.other_names) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Alias / Display Name</label>
+        <input name="alias" placeholder="e.g. Dr. Otieno" value="{{ (consultant and consultant.alias) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <p class="text-xs text-muted/60 mt-1">Shown on booking sheets and visit lists if set; otherwise the full name is used.</p>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">Designation</label>
+            <input name="designation" placeholder="e.g. Cardiologist" value="{{ (consultant and consultant.designation) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Mobile No.</label>
+            <input name="mobile_no" value="{{ (consultant and consultant.mobile_no) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+    </div>
+    {% if consultant %}
+    <label class="flex items-center gap-2 text-sm text-muted">
+        <input type="checkbox" name="is_active" {% if consultant.is_active %}checked{% endif %} class="rounded border-ink/20">
+        Active
+    </label>
+    {% endif %}
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            {{ "Save Changes" if consultant else "Save Consultant" }}
+        </button>
+        <a href="{{ url_for('consultants.list_consultants') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

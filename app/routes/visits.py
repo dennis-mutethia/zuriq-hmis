@@ -2,7 +2,7 @@ from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app import db
-from app.models import Visit, Patient, Clinic
+from app.models import Visit, Patient, Clinic, Consultant
 
 visits_bp = Blueprint("visits", __name__, url_prefix="/visits")
 
@@ -62,6 +62,7 @@ def new_visit():
             nurse=request.form.get("nurse") or None,
             hpi=request.form.get("hpi") or None,
             is_consultant=bool(request.form.get("is_consultant")),
+            consultant_id=request.form.get("consultant_id") or None,
         )
         db.session.add(visit)
         db.session.commit()
@@ -72,6 +73,7 @@ def new_visit():
         "visits/form.html",
         patient=patient,
         clinics=Clinic.query.order_by(Clinic.name).all(),
+        consultants=Consultant.query.filter_by(is_active=True).order_by(Consultant.surname).all(),
     )
 
 

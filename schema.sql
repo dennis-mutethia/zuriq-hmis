@@ -547,6 +547,45 @@ CREATE TABLE observation_charts (
 
 CREATE INDEX idx_observation_charts_admission_id ON observation_charts (admission_id);
 
+-- ── Module: Consultants ───────────────────────────────────────────────────
+-- Source: tblconsultants, tblconsultantsbookings. `visits.is_consultant`
+-- has existed since the Visits module was built, but nothing backed it —
+-- `doctor` was just free text. This adds the real entity and links it in.
+--
+-- Consultant billing (tblconsultantbills, tblconsultantbillitems — a
+-- revenue-share model where the hospital takes a deduction and the
+-- consultant gets the net) is deliberately NOT built here; see README.
+
+CREATE TABLE consultants (
+    consultant_id  SERIAL PRIMARY KEY,
+    surname          TEXT NOT NULL,
+    other_names        TEXT NOT NULL,
+    alias                TEXT,     -- short display name, e.g. how they're referred to on a booking sheet
+    designation            TEXT,   -- e.g. 'Consultant Physician', 'Cardiologist'
+    mobile_no                TEXT,
+    is_active                  BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE consultant_bookings (
+    consultant_booking_id  SERIAL PRIMARY KEY,
+    consultant_id            INTEGER NOT NULL REFERENCES consultants(consultant_id),
+    patient_id                 INTEGER NOT NULL REFERENCES patients(patient_id),
+    visit_datetime                TIMESTAMPTZ,          -- the scheduled/expected time
+    datetime_booked                 TIMESTAMPTZ NOT NULL DEFAULT now(),
+    is_seen                            BOOLEAN NOT NULL DEFAULT FALSE,
+    booked_by                            INTEGER REFERENCES system_users(system_user_id)
+);
+
+CREATE INDEX idx_consultant_bookings_consultant_id ON consultant_bookings (consultant_id);
+CREATE INDEX idx_consultant_bookings_patient_id ON consultant_bookings (patient_id);
+
+-- Link visits to the real consultant entity now that it exists. Added via
+-- ALTER rather than in the original CREATE TABLE visits (which comes
+-- earlier in this file, before consultants existed) — same reason
+-- ALTER-after-the-fact is used throughout this schema when a later
+-- module needs to reach back into an earlier table.
+ALTER TABLE visits ADD COLUMN consultant_id INTEGER REFERENCES consultants(consultant_id);
+
 -- ── Module: Pharmacy / Dispensing ──────────────────────────────────────
 -- Source: tblproducts, tblprescriptions, tblprescriptionitems
 -- Note: the original schema has dozens of insurance-scheme price columns

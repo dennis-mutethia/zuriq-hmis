@@ -36,7 +36,8 @@
                     <span class="text-warn">Not linked yet</span>
                     {% endif %}
                 </td>
-                <td class="px-4 py-3 text-right">
+                <td class="px-4 py-3 text-right space-x-3">
+                    <a href="{{ url_for('accounts.edit_sub_account', sub_account_id=s.sub_account_id) }}" class="text-muted hover:text-ink">Edit</a>
                     <a href="{{ url_for('accounts.link_sub_account', sub_account_id=s.sub_account_id) }}"
                        class="text-brand-600 hover:text-brand-700 font-medium">Link to Account</a>
                 </td>

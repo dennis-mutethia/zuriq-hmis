@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Book Patient — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Consultants{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-1">Book Patient</h1>
+<p class="text-muted mb-6">with {{ consultant.display_name }}</p>
+
+<form method="get" class="mb-6">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by name or OP number…"
+           class="w-full sm:w-96 border border-ink/15 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+</form>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden mb-6">
+    <table class="w-full text-sm text-left">
+        <tbody class="divide-y divide-ink/5">
+            {% for p in patients %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-mono">{{ p.out_patient_no or "—" }}</td>
+                <td class="px-4 py-3 font-medium">{{ p.full_name }}</td>
+                <td class="px-4 py-3 text-right">
+                    <button type="button" onclick="document.getElementById('patient_id').value='{{ p.patient_id }}'; document.getElementById('selected_name').textContent='{{ p.full_name }}';"
+                            class="text-brand-600 hover:text-brand-700 font-medium">Select</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td class="px-4 py-8 text-center text-muted/60">{% if q %}No matching patients.{% else %}Search for a patient above.{% endif %}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-md space-y-4">
+    <input type="hidden" id="patient_id" name="patient_id" required>
+    <p class="text-sm">Selected patient: <span id="selected_name" class="font-medium text-ink">none yet</span></p>
+    <div>
+        <label class="block text-sm text-muted mb-1">Scheduled Visit Date/Time</label>
+        <input type="datetime-local" name="visit_datetime" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Book
+        </button>
+        <a href="{{ url_for('consultants.view_bookings', consultant_id=consultant.consultant_id) }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

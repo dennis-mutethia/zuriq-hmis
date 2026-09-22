@@ -1,21 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Add Bank — Zuriq-HMIS{% endblock %}
+{% block title %}{{ "Edit" if bank else "Add" }} Bank — Zuriq-HMIS{% endblock %}
 {% block breadcrumb %}Accounts{% endblock %}
 {% block content %}
 
-<h1 class="text-2xl font-semibold text-ink mb-6">Add Bank</h1>
+<h1 class="text-2xl font-semibold text-ink mb-6">{{ "Edit Bank" if bank else "Add Bank" }}</h1>
 
 <form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-md space-y-4">
     <div>
         <label class="block text-sm text-muted mb-1">Name *</label>
-        <input name="name" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <input name="name" required value="{{ (bank and bank.name) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
     </div>
     <div>
         <label class="block text-sm text-muted mb-1">Bank Code</label>
-        <input name="bank_code" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <input name="bank_code" value="{{ (bank and bank.bank_code) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
     </div>
     <div class="flex items-center gap-3 pt-2">
-        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">Save Bank</button>
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">{{ "Save Changes" if bank else "Save Bank" }}</button>
         <a href="{{ url_for('accounts.list_banks') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
     </div>
 </form>

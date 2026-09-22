@@ -2,15 +2,21 @@
 {% block title %}{{ po.purchase_order_no }} — Zuriq-HMIS{% endblock %}
 {% block breadcrumb %}Procurement{% endblock %}
 {% block content %}
+<div class="zh-print-surface">
+
 
 <div class="zh-action-row mb-6">
+    <button type="button" class="zh-print-btn no-print" onclick="zhPrint('a4')" title="Open browser print dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9V4h12v5M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/><path d="M18 12h.01"/></svg>
+        Print
+    </button>
     <div>
         <h1 class="text-2xl font-semibold text-ink">{{ po.purchase_order_no }}</h1>
         <p class="text-sm text-muted">{{ po.supplier.name }} · Issued {{ po.date_time_issued.strftime("%d %b %Y") }}</p>
     </div>
     <div class="flex items-center gap-3">
         {% if not po.has_been_checked %}
-        <form method="post" action="{{ url_for('procurement.check_purchase_order', purchase_order_id=po.purchase_order_id) }}">
+        <form class="no-print" method="post" action="{{ url_for('procurement.check_purchase_order', purchase_order_id=po.purchase_order_id) }}">
             <button type="submit" class="text-sm bg-canvas hover:bg-ink/10 text-ink px-4 py-2 rounded-lg font-medium">Mark Checked</button>
         </form>
         {% endif %}
@@ -73,4 +79,6 @@
 </div>
 {% endif %}
 
+
+</div>
 {% endblock %}

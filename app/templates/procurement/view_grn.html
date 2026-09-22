@@ -2,6 +2,8 @@
 {% block title %}{{ grn.grn_no }} — Zuriq-HMIS{% endblock %}
 {% block breadcrumb %}Procurement{% endblock %}
 {% block content %}
+<div class="zh-print-surface">
+
 
 <div class="zh-action-row mb-6">
     <div>
@@ -14,12 +16,16 @@
     {% if grn.is_committed_to_stock %}
     <span class="text-sm bg-success/10 text-success px-3 py-1 rounded-full">Committed to stock</span>
     {% else %}
-    <form method="post" action="{{ url_for('procurement.commit_grn', grn_id=grn.grn_id) }}">
+    <form class="no-print" method="post" action="{{ url_for('procurement.commit_grn', grn_id=grn.grn_id) }}">
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
             Commit to Stock
         </button>
     </form>
     {% endif %}
+    <button type="button" class="zh-print-btn no-print" onclick="zhPrint('a4')" title="Open browser print dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9V4h12v5M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/><path d="M18 12h.01"/></svg>
+        Print
+    </button>
 </div>
 
 <div class="bg-white rounded-xl border border-ink/10 overflow-x-auto">
@@ -53,4 +59,6 @@
 </p>
 {% endif %}
 
+
+</div>
 {% endblock %}

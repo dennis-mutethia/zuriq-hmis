@@ -2,6 +2,8 @@
 {% block title %}Prescription — Zuriq-HMIS{% endblock %}
 {% block breadcrumb %}Pharmacy{% endblock %}
 {% block content %}
+<div class="zh-print-surface">
+
 
 <div class="zh-action-row mb-6">
     <div>
@@ -14,6 +16,10 @@
     {% else %}
     <span class="text-sm bg-warn/10 text-warn px-3 py-1 rounded-full">Pending items</span>
     {% endif %}
+    <button type="button" class="zh-print-btn no-print" onclick="zhPrint('a4')" title="Open browser print dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9V4h12v5M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/><path d="M18 12h.01"/></svg>
+        Print
+    </button>
 </div>
 
 {% if prescription.special_instruction %}
@@ -50,7 +56,7 @@
                 </td>
                 <td class="px-4 py-3 text-right">
                     {% if not item.has_been_dispensed %}
-                    <form method="post" action="{{ url_for('pharmacy.dispense_item', item_id=item.prescription_item_id) }}">
+                    <form class="no-print" method="post" action="{{ url_for('pharmacy.dispense_item', item_id=item.prescription_item_id) }}">
                         <button type="submit" class="text-brand-600 hover:text-brand-700 font-medium">Dispense</button>
                     </form>
                     {% endif %}
@@ -61,4 +67,6 @@
     </table>
 </div>
 
+
+</div>
 {% endblock %}

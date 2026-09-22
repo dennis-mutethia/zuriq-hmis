@@ -2,8 +2,14 @@
 {% block title %}Reports — Zuriq-HMIS{% endblock %}
 {% block breadcrumb %}Reports{% endblock %}
 {% block content %}
+<div class="zh-print-surface">
+
 
 <h1 class="text-2xl font-semibold text-ink mb-6">Reports</h1>
+<div class="mb-5 no-print"><button type="button" class="zh-print-btn no-print" onclick="zhPrint('a4')" title="Open browser print dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9V4h12v5M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/><path d="M18 12h.01"/></svg>
+        Print
+    </button></div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <div class="bg-white rounded-xl border border-ink/10 p-5">
@@ -107,4 +113,6 @@ new Chart(document.getElementById('visitsChart'), {
 });
 </script>
 
+
+</div>
 {% endblock %}

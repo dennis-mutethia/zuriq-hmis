@@ -263,6 +263,58 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## HR — Employees & Payroll
+
+Source: `tblemployees`, `tblemploymenttypes`, `tblpayrollparametercategories`,
+`tblpayrollparameters`, `tblemployeepayrollparameter`, `tblpayslipperiods`,
+`tblpayslips`, `tblemployeepayslipparameter`.
+
+**This is genuinely dangerous territory to get wrong, so it's built
+narrow and honest about it:** the original computes full Kenyan statutory
+payroll (PAYE tax bands, NHIF, NSSF, reliefs — `tblpayslips` has 30 columns
+for this). **That calculation logic is not reproduced here.** Tax bands
+and statutory rates change via legislation, and this system has no way to
+know if hardcoded rates are current — silently miscalculating someone's
+real pay is a much worse failure mode than most bugs in this app. Instead:
+
+- `/hr/parameters` — define any earning or deduction (Basic Pay, House
+  Allowance, PAYE, NHIF, NSSF, ...) as a named parameter. **You supply the
+  actual amounts, verified against current KRA/NSSF/SHIF guidance** — same
+  as any other deduction, with a visible warning on that page saying so.
+- `/hr` — add employees (staff no., ID, department, employment type, bank
+  details) and set their standing payroll parameters (their usual Basic
+  Pay, allowances, etc.)
+- `/hr/payroll` — create a period (e.g. "January 2026"), then generate
+  payslips: net pay is simple arithmetic, `sum(Earnings) − sum(Deductions)`,
+  snapshotted from each employee's standing parameters at generation time
+  — editing a standing amount later never retroactively changes a past
+  payslip
+- Generating a period's payslips skips anyone who already has one for that
+  period, or who has no standing parameters set up yet — safe to re-run
+
+No default employment types or payroll parameters are seeded — unlike
+Rooms or Services elsewhere in this app, guessing at HR/payroll categories
+felt more presumptuous than helpful here. Set up what your actual
+organization uses via the UI.
+
+Run `migrations/migration_add_hr_payroll.sql` on an existing database, or
+`schema.sql` for fresh installs.
+
+### What's intentionally deferred (HR)
+
+- **Statutory payroll calculation** — see above; this is the load-bearing
+  caveat of the whole module.
+- **Payroll → GL posting** — payroll doesn't create journal vouchers
+  (Debit Salary Expense, Credit Cash/Payable) yet; Accounts and HR are
+  separate systems right now, same situation Billing was in before its
+  own GL integration.
+- **Bank/branch normalization** — `bank_name`/`bank_account_no` are plain
+  text on Employee, not linked to the `tblbanks`/`tblbankbranch` structure
+  from the original (which doesn't exist in Zuriq yet either — see Bank
+  Deposits/Reconciliation under Accounts).
+- **Leave, attendance, disciplinary records** — not part of this HR slice;
+  the original likely has more HR forms beyond payroll not covered here.
+
 ## Billing → General Ledger integration
 
 Recording a payment (`billing.record_payment`) now posts a journal voucher

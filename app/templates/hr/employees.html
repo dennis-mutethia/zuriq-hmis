@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Employees — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}HR{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Employees</h1>
+    <div class="flex items-center gap-4">
+        <a href="{{ url_for('hr.list_departments') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Departments</a>
+        <a href="{{ url_for('hr.list_parameters') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Payroll Parameters</a>
+        <a href="{{ url_for('hr.list_periods') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Payroll</a>
+        <a href="{{ url_for('hr.new_employee') }}"
+           class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+            + Add Employee
+        </a>
+    </div>
+</div>
+
+<form method="get" class="mb-6">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by name or staff number…"
+           class="w-full sm:w-96 border border-ink/15 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+</form>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Staff No.</th>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">Department</th>
+                <th class="px-4 py-3">Designation</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for e in employees %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-mono">{{ e.staff_no or "—" }}</td>
+                <td class="px-4 py-3 font-medium">{{ e.full_name }}</td>
+                <td class="px-4 py-3 text-muted">{{ e.department.name if e.department else "—" }}</td>
+                <td class="px-4 py-3 text-muted">{{ e.designation or "—" }}</td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('hr.view_employee', employee_id=e.employee_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-muted/60">No employees yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

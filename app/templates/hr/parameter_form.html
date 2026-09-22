@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Add Parameter — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}HR{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Add Payroll Parameter</h1>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-md space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Name *</label>
+        <input name="name" required placeholder="e.g. Basic Pay, PAYE" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Category *</label>
+        <select name="parameter_category_id" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            {% for c in categories %}
+            <option value="{{ c.parameter_category_id }}">{{ c.name }} ({{ c.category_type }})</option>
+            {% endfor %}
+        </select>
+        {% if not categories %}
+        <p class="text-xs text-warn mt-1">No categories yet — <a href="{{ url_for('hr.new_parameter_category') }}" class="underline">add one</a> first.</p>
+        {% endif %}
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Parameter
+        </button>
+        <a href="{{ url_for('hr.list_parameters') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

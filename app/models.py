@@ -150,6 +150,119 @@ class Visit(db.Model):
     clinic = db.relationship("Clinic")
 
 
+class Department(db.Model):
+    __tablename__ = "departments"
+    department_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+
+class EmploymentType(db.Model):
+    __tablename__ = "employment_types"
+    employment_type_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+
+class Employee(db.Model):
+    __tablename__ = "employees"
+
+    employee_id = db.Column(db.Integer, primary_key=True)
+    staff_no = db.Column(db.Text, unique=True)
+    surname = db.Column(db.Text, nullable=False)
+    other_names = db.Column(db.Text, nullable=False)
+    id_type_id = db.Column(db.Integer, db.ForeignKey("id_types.id_type_id"))
+    id_no = db.Column(db.Text)
+    telephone1 = db.Column(db.Text)
+    department_id = db.Column(db.Integer, db.ForeignKey("departments.department_id"))
+    designation = db.Column(db.Text)
+    employment_type_id = db.Column(db.Integer, db.ForeignKey("employment_types.employment_type_id"))
+    date_employed = db.Column(db.Date)
+    payroll_no = db.Column(db.Text)
+    pin_no = db.Column(db.Text)
+    nhif_no = db.Column(db.Text)
+    nssf_no = db.Column(db.Text)
+    bank_name = db.Column(db.Text)
+    bank_account_no = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+    id_type = db.relationship("IdType")
+    department = db.relationship("Department")
+    employment_type = db.relationship("EmploymentType")
+    standing_parameters = db.relationship("EmployeePayrollParameter", backref="employee", cascade="all, delete-orphan")
+
+    @property
+    def full_name(self):
+        return f"{self.surname} {self.other_names}"
+
+
+class PayrollParameterCategory(db.Model):
+    __tablename__ = "payroll_parameter_categories"
+    parameter_category_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    category_type = db.Column(db.Text, nullable=False)  # 'Earning' or 'Deduction'
+
+    parameters = db.relationship("PayrollParameter", back_populates="category")
+
+
+class PayrollParameter(db.Model):
+    __tablename__ = "payroll_parameters"
+    payroll_parameter_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    parameter_category_id = db.Column(db.Integer, db.ForeignKey("payroll_parameter_categories.parameter_category_id"), nullable=False)
+
+    category = db.relationship("PayrollParameterCategory", back_populates="parameters")
+
+
+class EmployeePayrollParameter(db.Model):
+    __tablename__ = "employee_payroll_parameters"
+
+    employee_payroll_parameter_id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.employee_id"), nullable=False)
+    payroll_parameter_id = db.Column(db.Integer, db.ForeignKey("payroll_parameters.payroll_parameter_id"), nullable=False)
+    amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+
+    parameter = db.relationship("PayrollParameter")
+
+
+class PayslipPeriod(db.Model):
+    __tablename__ = "payslip_periods"
+    payslip_period_id = db.Column(db.Integer, primary_key=True)
+    pay_month = db.Column(db.Integer, nullable=False)
+    pay_year = db.Column(db.Integer, nullable=False)
+    beginning_date = db.Column(db.Date, nullable=False)
+    ending_date = db.Column(db.Date, nullable=False)
+
+    @property
+    def label(self):
+        import calendar
+        return f"{calendar.month_name[self.pay_month]} {self.pay_year}"
+
+
+class Payslip(db.Model):
+    __tablename__ = "payslips"
+
+    payslip_id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.employee_id"), nullable=False)
+    payslip_period_id = db.Column(db.Integer, db.ForeignKey("payslip_periods.payslip_period_id"), nullable=False)
+    gross_earning_total = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    deduction_total = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    net_pay = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    is_paid = db.Column(db.Boolean, nullable=False, default=False)
+    generated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    employee = db.relationship("Employee")
+    period = db.relationship("PayslipPeriod")
+    items = db.relationship("PayslipItem", backref="payslip", cascade="all, delete-orphan")
+
+
+class PayslipItem(db.Model):
+    __tablename__ = "payslip_items"
+    payslip_item_id = db.Column(db.Integer, primary_key=True)
+    payslip_id = db.Column(db.Integer, db.ForeignKey("payslips.payslip_id"), nullable=False)
+    name = db.Column(db.Text, nullable=False)
+    category_type = db.Column(db.Text, nullable=False)
+    amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+
+
 class AccountType(db.Model):
     __tablename__ = "account_types"
     account_type_id = db.Column(db.Integer, primary_key=True)

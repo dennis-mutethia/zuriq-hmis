@@ -17,6 +17,7 @@ _ICONS = {
     "vitals": '<path stroke-linecap="round" stroke-linejoin="round" d="M2 10h3l1.5-4L9 15l2-9 1.5 4H18"/>',
     "queue": '<circle cx="6" cy="6" r="1.6"/><circle cx="6" cy="14" r="1.6"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 6h6M10 10h6M10 14h6"/>',
     "ledger": '<path stroke-linecap="round" stroke-linejoin="round" d="M5 3h10v14H5V3zm3 4h4m-4 3h4m-4 3h2"/>',
+    "hr": '<circle cx="7" cy="6" r="2"/><circle cx="13" cy="6" r="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 16c0-2.5 1.8-4 4-4s4 1.5 4 4M9 16c0-2.5 1.8-4 4-4s4 1.5 4 4"/>',
 }
 
 

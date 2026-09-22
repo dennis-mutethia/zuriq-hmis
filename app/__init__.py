@@ -53,6 +53,9 @@ def create_app():
     from app.routes.accounts import accounts_bp
     app.register_blueprint(accounts_bp)
 
+    from app.routes.hr import hr_bp
+    app.register_blueprint(hr_bp)
+
     from app.routes.admissions import admissions_bp
     app.register_blueprint(admissions_bp)
 

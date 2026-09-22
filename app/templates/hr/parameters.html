@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Payroll Parameters — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}HR{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Payroll Parameters</h1>
+    <div class="flex items-center gap-4">
+        <a href="{{ url_for('hr.new_parameter_category') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">+ Add Category</a>
+        <a href="{{ url_for('hr.new_parameter') }}" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">+ Add Parameter</a>
+    </div>
+</div>
+
+<div class="bg-warn/10 border border-warn/20 text-warn rounded-lg px-4 py-3 text-sm mb-6">
+    Statutory deductions (PAYE, NHIF/SHIF, NSSF) aren't calculated automatically —
+    add them here as Deduction parameters using rates you verify against current
+    KRA/NSSF/SHIF guidance, same as any other deduction.
+</div>
+
+{% for category in categories %}
+<div class="bg-white rounded-xl border border-ink/10 p-5 mb-4">
+    <div class="flex items-center justify-between mb-3">
+        <h2 class="font-semibold text-ink">{{ category.name }}</h2>
+        <span class="text-xs {{ 'bg-success/10 text-success' if category.category_type == 'Earning' else 'bg-warn/10 text-warn' }} px-2 py-1 rounded-full">
+            {{ category.category_type }}
+        </span>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        {% for p in category.parameters %}
+        <span class="text-xs bg-canvas text-ink px-3 py-1.5 rounded-lg">{{ p.name }}</span>
+        {% else %}
+        <span class="text-sm text-muted/60">No parameters in this category yet.</span>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="bg-white rounded-xl border border-ink/10 p-8 text-center text-muted/60">
+    No categories yet — add one to start (e.g. "Basic Pay" as Earning, "PAYE" as Deduction).
+</div>
+{% endfor %}
+
+{% endblock %}

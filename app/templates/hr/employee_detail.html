@@ -3,7 +3,11 @@
 {% block breadcrumb %}HR{% endblock %}
 {% block content %}
 
-<h1 class="text-2xl font-semibold text-ink mb-1">{{ employee.full_name }}</h1>
+<div class="flex items-center justify-between mb-1">
+    <h1 class="text-2xl font-semibold text-ink">{{ employee.full_name }}</h1>
+    <a href="{{ url_for('hr.edit_employee', employee_id=employee.employee_id) }}"
+       class="text-sm text-brand-600 hover:text-brand-700 font-medium">Edit Employee</a>
+</div>
 <p class="text-muted mb-6">{{ employee.designation or "—" }} · {{ employee.department.name if employee.department else "No department" }}</p>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

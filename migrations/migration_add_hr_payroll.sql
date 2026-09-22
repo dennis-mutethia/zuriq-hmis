@@ -90,4 +90,7 @@ CREATE INDEX IF NOT EXISTS idx_payslips_employee_id ON payslips (employee_id);
 CREATE INDEX IF NOT EXISTS idx_payslips_payslip_period_id ON payslips (payslip_period_id);
 CREATE INDEX IF NOT EXISTS idx_payslip_items_payslip_id ON payslip_items (payslip_id);
 
+INSERT INTO employment_types (name) VALUES ('Permanent'), ('Contract'), ('Casual'), ('Part-time')
+ON CONFLICT (name) DO NOTHING;
+
 COMMIT;

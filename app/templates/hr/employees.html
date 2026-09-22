@@ -39,7 +39,8 @@
                 <td class="px-4 py-3 font-medium">{{ e.full_name }}</td>
                 <td class="px-4 py-3 text-muted">{{ e.department.name if e.department else "—" }}</td>
                 <td class="px-4 py-3 text-muted">{{ e.designation or "—" }}</td>
-                <td class="px-4 py-3 text-right">
+                <td class="px-4 py-3 text-right space-x-3">
+                    <a href="{{ url_for('hr.edit_employee', employee_id=e.employee_id) }}" class="text-muted hover:text-ink">Edit</a>
                     <a href="{{ url_for('hr.view_employee', employee_id=e.employee_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">View</a>
                 </td>
             </tr>

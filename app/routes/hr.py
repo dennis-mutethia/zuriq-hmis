@@ -1,12 +1,13 @@
 from decimal import Decimal
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from app.models import (
     Employee, Department, EmploymentType, IdType,
     PayrollParameterCategory, PayrollParameter, EmployeePayrollParameter,
     PayslipPeriod, Payslip, PayslipItem,
 )
+from app.routes.auth import admin_required
 
 hr_bp = Blueprint("hr", __name__, url_prefix="/hr")
 
@@ -62,6 +63,32 @@ def new_employee():
     )
 
 
+@hr_bp.route("/employees/<int:employee_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_employee(employee_id):
+    employee = Employee.query.get_or_404(employee_id)
+
+    if request.method == "POST":
+        for field in ["staff_no", "surname", "other_names", "id_no", "telephone1",
+                      "designation", "date_employed", "payroll_no", "pin_no",
+                      "nhif_no", "nssf_no", "bank_name", "bank_account_no"]:
+            setattr(employee, field, request.form.get(field) or None)
+        employee.id_type_id = request.form.get("id_type_id") or None
+        employee.department_id = request.form.get("department_id") or None
+        employee.employment_type_id = request.form.get("employment_type_id") or None
+        db.session.commit()
+        flash(f"Employee {employee.full_name} updated.", "success")
+        return redirect(url_for("hr.view_employee", employee_id=employee.employee_id))
+
+    return render_template(
+        "hr/employee_form.html",
+        employee=employee,
+        departments=Department.query.order_by(Department.name).all(),
+        employment_types=EmploymentType.query.order_by(EmploymentType.name).all(),
+        id_types=IdType.query.all(),
+    )
+
+
 @hr_bp.route("/employees/<int:employee_id>")
 @login_required
 def view_employee(employee_id):
@@ -107,12 +134,41 @@ def list_departments():
 @hr_bp.route("/employment-types", methods=["GET", "POST"])
 @login_required
 def list_employment_types():
+    # Viewing is open to any logged-in user (the Employee form needs it),
+    # but only admins can add or edit — see edit_employment_type below.
     if request.method == "POST":
-        db.session.add(EmploymentType(name=request.form["name"].strip()))
-        db.session.commit()
-        flash("Employment type added.", "success")
+        if not current_user.is_admin:
+            flash("Only admins can add employment types.", "error")
+            return redirect(url_for("hr.list_employment_types"))
+        name = request.form["name"].strip()
+        if EmploymentType.query.filter_by(name=name).first():
+            flash(f"'{name}' already exists.", "error")
+        else:
+            db.session.add(EmploymentType(name=name))
+            db.session.commit()
+            flash("Employment type added.", "success")
         return redirect(url_for("hr.list_employment_types"))
     return render_template("hr/employment_types.html", employment_types=EmploymentType.query.order_by(EmploymentType.name).all())
+
+
+@hr_bp.route("/employment-types/<int:employment_type_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
+def edit_employment_type(employment_type_id):
+    employment_type = EmploymentType.query.get_or_404(employment_type_id)
+
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        existing = EmploymentType.query.filter_by(name=name).first()
+        if existing and existing.employment_type_id != employment_type.employment_type_id:
+            flash(f"'{name}' already exists.", "error")
+            return redirect(url_for("hr.edit_employment_type", employment_type_id=employment_type.employment_type_id))
+        employment_type.name = name
+        db.session.commit()
+        flash("Employment type updated.", "success")
+        return redirect(url_for("hr.list_employment_types"))
+
+    return render_template("hr/employment_type_form.html", employment_type=employment_type)
 
 
 # ── Payroll Parameters (Earnings/Deductions catalog) ─────────────────────

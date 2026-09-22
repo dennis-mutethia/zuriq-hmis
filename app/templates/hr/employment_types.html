@@ -5,6 +5,7 @@
 
 <h1 class="text-2xl font-semibold text-ink mb-6">Employment Types</h1>
 
+{% if current_user.is_admin %}
 <form method="post" class="bg-white rounded-xl border border-ink/10 p-4 mb-6 flex items-end gap-3 max-w-md">
     <div class="flex-1">
         <label class="block text-sm text-muted mb-1">New Type</label>
@@ -12,14 +13,24 @@
     </div>
     <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Add</button>
 </form>
+{% else %}
+<p class="text-sm text-muted mb-6">Only admins can add or edit employment types.</p>
+{% endif %}
 
 <div class="bg-white rounded-xl border border-ink/10 overflow-hidden max-w-md">
     <table class="w-full text-sm text-left">
         <tbody class="divide-y divide-ink/5">
             {% for t in employment_types %}
-            <tr class="hover:bg-canvas/60"><td class="px-4 py-3 font-medium">{{ t.name }}</td></tr>
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ t.name }}</td>
+                {% if current_user.is_admin %}
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('hr.edit_employment_type', employment_type_id=t.employment_type_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Edit</a>
+                </td>
+                {% endif %}
+            </tr>
             {% else %}
-            <tr><td class="px-4 py-8 text-center text-muted/60">No employment types yet.</td></tr>
+            <tr><td colspan="2" class="px-4 py-8 text-center text-muted/60">No employment types yet.</td></tr>
             {% endfor %}
         </tbody>
     </table>

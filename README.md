@@ -292,10 +292,13 @@ real pay is a much worse failure mode than most bugs in this app. Instead:
 - Generating a period's payslips skips anyone who already has one for that
   period, or who has no standing parameters set up yet — safe to re-run
 
-No default employment types or payroll parameters are seeded — unlike
-Rooms or Services elsewhere in this app, guessing at HR/payroll categories
-felt more presumptuous than helpful here. Set up what your actual
-organization uses via the UI.
+Employment types are seeded (Permanent, Contract, Casual, Part-time) so
+the Employee form isn't empty on first use, and are admin-only to add or
+edit (`/hr/employment-types`) — anyone logged in can view the list (the
+Employee form needs it), but only an admin sees the "Add" form or "Edit"
+links. Payroll parameters are deliberately left unseeded — unlike a short,
+generic list like employment types, guessing at what earnings/deductions
+your organization actually uses felt more presumptuous than helpful.
 
 Run `migrations/migration_add_hr_payroll.sql` on an existing database, or
 `schema.sql` for fresh installs.

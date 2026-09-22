@@ -658,6 +658,10 @@ CREATE INDEX idx_payslips_employee_id ON payslips (employee_id);
 CREATE INDEX idx_payslips_payslip_period_id ON payslips (payslip_period_id);
 CREATE INDEX idx_payslip_items_payslip_id ON payslip_items (payslip_id);
 
+-- Reasonable starting set so the Employee form isn't empty on first use —
+-- edit or add more via /hr/employment-types (admin only).
+INSERT INTO employment_types (name) VALUES ('Permanent'), ('Contract'), ('Casual'), ('Part-time');
+
 -- ── Module: Lab ──────────────────────────────────────────────────────────
 -- Source: tbltests, tblmedreqtests, tblmedreqtestitems
 -- Note: the original also has tbltestcomponents (structured component-level

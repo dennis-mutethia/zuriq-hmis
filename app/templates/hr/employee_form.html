@@ -1,39 +1,41 @@
 {% extends "base.html" %}
-{% block title %}Add Employee — Zuriq-HMIS{% endblock %}
+{% block title %}{{ "Edit" if employee else "Add" }} Employee — Zuriq-HMIS{% endblock %}
 {% block breadcrumb %}HR{% endblock %}
 {% block content %}
 
-<h1 class="text-2xl font-semibold text-ink mb-6">Add Employee</h1>
+<h1 class="text-2xl font-semibold text-ink mb-6">{{ "Edit Employee" if employee else "Add Employee" }}</h1>
 
 <form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-3xl space-y-6">
 
     <fieldset class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
             <label class="block text-sm text-muted mb-1">Surname *</label>
-            <input name="surname" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="surname" required value="{{ (employee and employee.surname) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Other Names *</label>
-            <input name="other_names" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="other_names" required value="{{ (employee and employee.other_names) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Staff No.</label>
-            <input name="staff_no" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="staff_no" value="{{ (employee and employee.staff_no) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Telephone</label>
-            <input name="telephone1" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="telephone1" value="{{ (employee and employee.telephone1) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">ID Type</label>
             <select name="id_type_id" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
                 <option value="">— Select —</option>
-                {% for t in id_types %}<option value="{{ t.id_type_id }}">{{ t.id_type }}</option>{% endfor %}
+                {% for t in id_types %}
+                <option value="{{ t.id_type_id }}" {% if employee and employee.id_type_id == t.id_type_id %}selected{% endif %}>{{ t.id_type }}</option>
+                {% endfor %}
             </select>
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">ID Number</label>
-            <input name="id_no" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="id_no" value="{{ (employee and employee.id_no) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
     </fieldset>
 
@@ -42,58 +44,62 @@
             <label class="block text-sm text-muted mb-1">Department</label>
             <select name="department_id" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
                 <option value="">— Select —</option>
-                {% for d in departments %}<option value="{{ d.department_id }}">{{ d.name }}</option>{% endfor %}
+                {% for d in departments %}
+                <option value="{{ d.department_id }}" {% if employee and employee.department_id == d.department_id %}selected{% endif %}>{{ d.name }}</option>
+                {% endfor %}
             </select>
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Designation</label>
-            <input name="designation" placeholder="e.g. Clinical Officer" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="designation" placeholder="e.g. Clinical Officer" value="{{ (employee and employee.designation) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Employment Type</label>
             <select name="employment_type_id" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
                 <option value="">— Select —</option>
-                {% for t in employment_types %}<option value="{{ t.employment_type_id }}">{{ t.name }}</option>{% endfor %}
+                {% for t in employment_types %}
+                <option value="{{ t.employment_type_id }}" {% if employee and employee.employment_type_id == t.employment_type_id %}selected{% endif %}>{{ t.name }}</option>
+                {% endfor %}
             </select>
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Date Employed</label>
-            <input type="date" name="date_employed" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input type="date" name="date_employed" value="{{ employee.date_employed.strftime('%Y-%m-%d') if employee and employee.date_employed else '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Payroll No.</label>
-            <input name="payroll_no" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="payroll_no" value="{{ (employee and employee.payroll_no) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
     </fieldset>
 
     <fieldset class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
             <label class="block text-sm text-muted mb-1">KRA PIN</label>
-            <input name="pin_no" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="pin_no" value="{{ (employee and employee.pin_no) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">NHIF No.</label>
-            <input name="nhif_no" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="nhif_no" value="{{ (employee and employee.nhif_no) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">NSSF No.</label>
-            <input name="nssf_no" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="nssf_no" value="{{ (employee and employee.nssf_no) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Bank Name</label>
-            <input name="bank_name" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="bank_name" value="{{ (employee and employee.bank_name) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Bank Account No.</label>
-            <input name="bank_account_no" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="bank_account_no" value="{{ (employee and employee.bank_account_no) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
     </fieldset>
 
     <div class="flex items-center gap-3 pt-4 border-t border-ink/10">
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
-            Save Employee
+            {{ "Save Changes" if employee else "Save Employee" }}
         </button>
-        <a href="{{ url_for('hr.list_employees') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+        <a href="{{ url_for('hr.view_employee', employee_id=employee.employee_id) if employee else url_for('hr.list_employees') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
     </div>
 </form>
 

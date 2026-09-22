@@ -41,6 +41,9 @@ def create_app():
     from app.routes.visits import visits_bp
     app.register_blueprint(visits_bp)
 
+    from app.routes.nursing import nursing_bp
+    app.register_blueprint(nursing_bp)
+
     from app.routes.billing import billing_bp
     app.register_blueprint(billing_bp)
 

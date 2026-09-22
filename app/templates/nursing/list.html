@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Nursing — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Nursing{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Nurse Triage Records</h1>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Patient</th>
+                <th class="px-4 py-3">OP No.</th>
+                <th class="px-4 py-3">BP</th>
+                <th class="px-4 py-3">Temp</th>
+                <th class="px-4 py-3">Pulse</th>
+                <th class="px-4 py-3">Weight</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for t in records %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 text-muted">{{ t.created_at.strftime("%d %b %Y %H:%M") }}</td>
+                <td class="px-4 py-3 font-medium">{{ t.visit.patient.full_name }}</td>
+                <td class="px-4 py-3 font-mono text-muted">{{ t.visit.patient.out_patient_no or "—" }}</td>
+                <td class="px-4 py-3">{{ t.blood_pressure or "—" }}</td>
+                <td class="px-4 py-3">{{ t.temperature or "—" }}{% if t.temperature %}°C{% endif %}</td>
+                <td class="px-4 py-3">{{ t.pulse_rate or "—" }}</td>
+                <td class="px-4 py-3">{{ t.weight or "—" }}{% if t.weight %}kg{% endif %}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="px-4 py-8 text-center text-muted/60">No triage records yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

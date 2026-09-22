@@ -263,6 +263,37 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## Nursing / Vitals
+
+The original app has two distinct workflows here, not one generic "vitals"
+table — kept them separate rather than merging them into something simpler
+but less faithful:
+
+- **Nurse Triage** (`/nursing`, or "Triage" from the Visits list) — one
+  record per OPD visit: blood pressure, pulse, respiration, temperature,
+  weight, each with its own remarks field, plus general notes. This is
+  what happens between registration and seeing the doctor.
+- **Observation Chart** (`/nursing/admission/<id>`, or "Vitals" from
+  Admissions) — repeated readings over time during an inpatient stay:
+  systolic/diastolic BP, pulse, respiratory rate, SPo2, temperature. Unlike
+  triage, this is a running log, not a single record — the page shows
+  entry form + full reading history together.
+
+Before this, Zuriq had zero structured clinical documentation beyond a
+single free-text HPI field on Visit. This is the first real clinical data
+capture beyond "a visit happened."
+
+Run `migrations/migration_add_nursing.sql` on an existing database, or
+`schema.sql` for fresh installs.
+
+### What's intentionally deferred (Nursing)
+
+- **Nurse Care Plans** — the original has a separate care-planning
+  workflow (`tblnursecareplan`) not built here; triage and observation
+  charts cover vitals capture, not care planning.
+- **Reference ranges / abnormal flagging** — no automatic highlighting of
+  out-of-range vitals (e.g. a dangerously low SPo2) yet.
+
 ## Billing links (Pharmacy + Lab → Billing)
 
 Dispensing a medication or completing a lab test now generates a real bill

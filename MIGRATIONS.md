@@ -22,6 +22,7 @@ before it.
 | 9 | `migration_roles_table.sql` | #7 | `roles` table + `system_users.role_id` |
 | 10 | `migration_add_stock_movements.sql` | #5 | `stock_movements` |
 | 11 | `migration_add_suppliers.sql` | #10 | `suppliers`, links to `stock_movements` |
+| 12 | `migration_add_nursing.sql` | #2, #4 | `nurse_triage`, `observation_charts` |
 
 **Skip `migration_add_roles.sql` entirely** if you haven't already run it —
 `migration_roles_table.sql` (step 9) supersedes it and does the equivalent

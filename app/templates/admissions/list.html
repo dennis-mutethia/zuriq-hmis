@@ -50,6 +50,8 @@
                 <td class="px-4 py-3 text-muted">{{ a.admission_datetime.strftime("%d %b %Y %H:%M") }}</td>
                 <td class="px-4 py-3">{{ a.admitting_doctor or "—" }}</td>
                 <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('nursing.observation_chart', admission_id=a.admission_id) }}"
+                       class="text-ink/70 hover:text-ink font-medium mr-3">Vitals</a>
                     {% if a.is_in_admission %}
                     <form method="post" action="{{ url_for('admissions.discharge', admission_id=a.admission_id) }}"
                           onsubmit="return confirm('Discharge {{ a.patient.full_name }}?');" class="inline-flex items-center gap-2">

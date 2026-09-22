@@ -188,6 +188,47 @@ CREATE TABLE visits (
 CREATE INDEX idx_visits_patient_id ON visits (patient_id);
 CREATE INDEX idx_visits_visit_datetime ON visits (visit_datetime);
 
+-- ── Module: Nursing / Vitals ─────────────────────────────────────────────
+-- Source: tblnursetriage (OPD, one per visit), tblobservationcharts
+-- (inpatient, repeated readings during an admission). These are two
+-- distinct workflows in the original app, not one generic "vitals" table.
+
+CREATE TABLE nurse_triage (
+    nurse_triage_id          SERIAL PRIMARY KEY,
+    visit_id                   INTEGER NOT NULL REFERENCES visits(visit_id),
+    blood_pressure              TEXT,             -- e.g. '120/80', kept as text to match free-entry format
+    blood_pressure_remarks      TEXT,
+    pulse_rate                   NUMERIC(5,1),
+    pulse_rate_remarks           TEXT,
+    respiration_rate             NUMERIC(5,1),
+    respiration_rate_remarks     TEXT,
+    temperature                   NUMERIC(4,1),
+    temperature_remarks           TEXT,
+    weight                         NUMERIC(6,2),
+    weight_remarks                 TEXT,
+    notes                           TEXT,
+    recorded_by                     INTEGER REFERENCES system_users(system_user_id),
+    created_at                       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_nurse_triage_visit_id ON nurse_triage (visit_id);
+
+CREATE TABLE observation_charts (
+    observation_id      SERIAL PRIMARY KEY,
+    admission_id           INTEGER NOT NULL REFERENCES admissions(admission_id),
+    systolic                 NUMERIC(5,1),
+    diastolic                 NUMERIC(5,1),
+    pulse                     NUMERIC(5,1),
+    respiratory               NUMERIC(5,1),
+    spo2                       NUMERIC(5,1),
+    temperature                 NUMERIC(4,1),
+    comments                     TEXT,
+    recorded_by                   INTEGER REFERENCES system_users(system_user_id),
+    created_at                     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_observation_charts_admission_id ON observation_charts (admission_id);
+
 -- ── Module: Billing ──────────────────────────────────────────────────────
 -- Source: tblservices, tblmedicalbills, tblsaleitems (via BaseClasses)
 

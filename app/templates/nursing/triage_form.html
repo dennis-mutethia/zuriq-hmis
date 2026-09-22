@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Nurse Triage — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Nursing{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Nurse Triage</h1>
+
+<div class="bg-white rounded-xl border border-ink/10 p-4 mb-6">
+    <div class="font-semibold text-ink">{{ patient.full_name }}</div>
+    <div class="text-sm text-muted">OP: <span class="font-mono">{{ patient.out_patient_no }}</span> · Visit: {{ visit.visit_datetime.strftime("%d %b %Y %H:%M") }}</div>
+</div>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-2xl space-y-5">
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">Blood Pressure</label>
+            <div class="flex gap-2">
+                <input name="blood_pressure" placeholder="120/80" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+                <input name="blood_pressure_remarks" placeholder="Remarks" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Temperature (°C)</label>
+            <div class="flex gap-2">
+                <input type="number" step="0.1" name="temperature" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+                <input name="temperature_remarks" placeholder="Remarks" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Pulse Rate (bpm)</label>
+            <div class="flex gap-2">
+                <input type="number" step="1" name="pulse_rate" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+                <input name="pulse_rate_remarks" placeholder="Remarks" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Respiration Rate (/min)</label>
+            <div class="flex gap-2">
+                <input type="number" step="1" name="respiration_rate" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+                <input name="respiration_rate_remarks" placeholder="Remarks" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Weight (kg)</label>
+            <div class="flex gap-2">
+                <input type="number" step="0.1" name="weight" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+                <input name="weight_remarks" placeholder="Remarks" class="flex-1 border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <label class="block text-sm text-muted mb-1">Notes</label>
+        <textarea name="notes" rows="3" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm"></textarea>
+    </div>
+
+    <div class="flex items-center gap-3 pt-4 border-t border-ink/10">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Save Triage
+        </button>
+        <a href="{{ url_for('visits.list_visits') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

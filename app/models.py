@@ -149,6 +149,48 @@ class Visit(db.Model):
     clinic = db.relationship("Clinic")
 
 
+class NurseTriage(db.Model):
+    __tablename__ = "nurse_triage"
+
+    nurse_triage_id = db.Column(db.Integer, primary_key=True)
+    visit_id = db.Column(db.Integer, db.ForeignKey("visits.visit_id"), nullable=False)
+    blood_pressure = db.Column(db.Text)
+    blood_pressure_remarks = db.Column(db.Text)
+    pulse_rate = db.Column(db.Numeric(5, 1))
+    pulse_rate_remarks = db.Column(db.Text)
+    respiration_rate = db.Column(db.Numeric(5, 1))
+    respiration_rate_remarks = db.Column(db.Text)
+    temperature = db.Column(db.Numeric(4, 1))
+    temperature_remarks = db.Column(db.Text)
+    weight = db.Column(db.Numeric(6, 2))
+    weight_remarks = db.Column(db.Text)
+    notes = db.Column(db.Text)
+    recorded_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    visit = db.relationship("Visit", backref="triage_records")
+    recorded_by_user = db.relationship("SystemUser")
+
+
+class ObservationChart(db.Model):
+    __tablename__ = "observation_charts"
+
+    observation_id = db.Column(db.Integer, primary_key=True)
+    admission_id = db.Column(db.Integer, db.ForeignKey("admissions.admission_id"), nullable=False)
+    systolic = db.Column(db.Numeric(5, 1))
+    diastolic = db.Column(db.Numeric(5, 1))
+    pulse = db.Column(db.Numeric(5, 1))
+    respiratory = db.Column(db.Numeric(5, 1))
+    spo2 = db.Column(db.Numeric(5, 1))
+    temperature = db.Column(db.Numeric(4, 1))
+    comments = db.Column(db.Text)
+    recorded_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    admission = db.relationship("Admission", backref="observations")
+    recorded_by_user = db.relationship("SystemUser")
+
+
 class Service(db.Model):
     __tablename__ = "services"
     service_id = db.Column(db.Integer, primary_key=True)

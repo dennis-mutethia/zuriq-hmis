@@ -259,6 +259,22 @@ CREATE INDEX idx_subaccount_entries_acc_sub_acc_id ON subaccount_entries (acc_su
 
 INSERT INTO account_types (name) VALUES ('Asset'), ('Liability'), ('Equity'), ('Income'), ('Expense');
 
+-- A minimal starting Chart of Accounts so payments have somewhere to post
+-- to out of the box. This is a reasonable default for a small cash-pay
+-- clinic, not a real accountant's chart — restructure freely via
+-- /accounts/chart. The billing payment integration below looks these
+-- sub-accounts up BY NAME, so renaming/deleting them turns off
+-- auto-posting gracefully rather than breaking (see README).
+INSERT INTO accounts (account_no, name, account_type_id) VALUES
+    ('1000', 'Cash and Bank', (SELECT account_type_id FROM account_types WHERE name = 'Asset')),
+    ('4000', 'Service Revenue', (SELECT account_type_id FROM account_types WHERE name = 'Income'));
+
+INSERT INTO sub_accounts (name) VALUES ('Cash'), ('Service Revenue');
+
+INSERT INTO account_sub_accounts (account_id, sub_account_id) VALUES
+    ((SELECT account_id FROM accounts WHERE account_no = '1000'), (SELECT sub_account_id FROM sub_accounts WHERE name = 'Cash')),
+    ((SELECT account_id FROM accounts WHERE account_no = '4000'), (SELECT sub_account_id FROM sub_accounts WHERE name = 'Service Revenue'));
+
 -- ── Module: Queue Management ─────────────────────────────────────────────
 -- Source: tbltempqueue. The original stores room names as free text and
 -- waiting/service/total time as separately-stored integers (computed once,
@@ -285,47 +301,6 @@ CREATE TABLE queue_entries (
 CREATE INDEX idx_queue_entries_visit_id ON queue_entries (visit_id);
 CREATE INDEX idx_queue_entries_to_room_id ON queue_entries (to_room_id);
 CREATE INDEX idx_queue_entries_active ON queue_entries (to_room_id) WHERE completed_at IS NULL;
-
--- ── Module: Nursing / Vitals ─────────────────────────────────────────────
--- Source: tblnursetriage (OPD, one per visit), tblobservationcharts
--- (inpatient, repeated readings during an admission). These are two
--- distinct workflows in the original app, not one generic "vitals" table.
-
-CREATE TABLE nurse_triage (
-    nurse_triage_id          SERIAL PRIMARY KEY,
-    visit_id                   INTEGER NOT NULL REFERENCES visits(visit_id),
-    blood_pressure              TEXT,             -- e.g. '120/80', kept as text to match free-entry format
-    blood_pressure_remarks      TEXT,
-    pulse_rate                   NUMERIC(5,1),
-    pulse_rate_remarks           TEXT,
-    respiration_rate             NUMERIC(5,1),
-    respiration_rate_remarks     TEXT,
-    temperature                   NUMERIC(4,1),
-    temperature_remarks           TEXT,
-    weight                         NUMERIC(6,2),
-    weight_remarks                 TEXT,
-    notes                           TEXT,
-    recorded_by                     INTEGER REFERENCES system_users(system_user_id),
-    created_at                       TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX idx_nurse_triage_visit_id ON nurse_triage (visit_id);
-
-CREATE TABLE observation_charts (
-    observation_id      SERIAL PRIMARY KEY,
-    admission_id           INTEGER NOT NULL REFERENCES admissions(admission_id),
-    systolic                 NUMERIC(5,1),
-    diastolic                 NUMERIC(5,1),
-    pulse                     NUMERIC(5,1),
-    respiratory               NUMERIC(5,1),
-    spo2                       NUMERIC(5,1),
-    temperature                 NUMERIC(4,1),
-    comments                     TEXT,
-    recorded_by                   INTEGER REFERENCES system_users(system_user_id),
-    created_at                     TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX idx_observation_charts_admission_id ON observation_charts (admission_id);
 
 -- ── Module: Billing ──────────────────────────────────────────────────────
 -- Source: tblservices, tblmedicalbills, tblsaleitems (via BaseClasses)
@@ -459,6 +434,49 @@ CREATE TRIGGER trg_on_admission_created
 AFTER INSERT ON admissions
 FOR EACH ROW
 EXECUTE FUNCTION on_admission_created();
+
+-- ── Module: Nursing / Vitals ─────────────────────────────────────────────
+-- Source: tblnursetriage (OPD, one per visit), tblobservationcharts
+-- (inpatient, repeated readings during an admission). These are two
+-- distinct workflows in the original app, not one generic "vitals" table.
+-- Placed here (after Admissions) because observation_charts depends on
+-- the admissions table existing first.
+
+CREATE TABLE nurse_triage (
+    nurse_triage_id          SERIAL PRIMARY KEY,
+    visit_id                   INTEGER NOT NULL REFERENCES visits(visit_id),
+    blood_pressure              TEXT,             -- e.g. '120/80', kept as text to match free-entry format
+    blood_pressure_remarks      TEXT,
+    pulse_rate                   NUMERIC(5,1),
+    pulse_rate_remarks           TEXT,
+    respiration_rate             NUMERIC(5,1),
+    respiration_rate_remarks     TEXT,
+    temperature                   NUMERIC(4,1),
+    temperature_remarks           TEXT,
+    weight                         NUMERIC(6,2),
+    weight_remarks                 TEXT,
+    notes                           TEXT,
+    recorded_by                     INTEGER REFERENCES system_users(system_user_id),
+    created_at                       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_nurse_triage_visit_id ON nurse_triage (visit_id);
+
+CREATE TABLE observation_charts (
+    observation_id      SERIAL PRIMARY KEY,
+    admission_id           INTEGER NOT NULL REFERENCES admissions(admission_id),
+    systolic                 NUMERIC(5,1),
+    diastolic                 NUMERIC(5,1),
+    pulse                     NUMERIC(5,1),
+    respiratory               NUMERIC(5,1),
+    spo2                       NUMERIC(5,1),
+    temperature                 NUMERIC(4,1),
+    comments                     TEXT,
+    recorded_by                   INTEGER REFERENCES system_users(system_user_id),
+    created_at                     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_observation_charts_admission_id ON observation_charts (admission_id);
 
 -- ── Module: Pharmacy / Dispensing ──────────────────────────────────────
 -- Source: tblproducts, tblprescriptions, tblprescriptionitems

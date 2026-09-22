@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
-from app.models import MedicalBill, BillItem, Service, Visit, Patient
+from app.models import (
+    MedicalBill, BillItem, Service, Visit, Patient,
+    AccountSubAccount, FiscalPeriod, JournalVoucher, SubaccountEntry,
+)
 
 billing_bp = Blueprint("billing", __name__, url_prefix="/billing")
 
@@ -81,9 +84,44 @@ def record_payment(medical_bill_id):
     if bill.balance_due <= 0:
         bill.is_processed = True
         bill.date_time_processed = datetime.now(timezone.utc)
+
+    gl_note = _post_payment_to_gl(bill, amount)
     db.session.commit()
-    flash(f"Payment of KES {amount:,.2f} recorded.", "success")
+    flash(f"Payment of KES {amount:,.2f} recorded.{gl_note}", "success")
     return redirect(url_for("billing.view_bill", medical_bill_id=bill.medical_bill_id))
+
+
+def _post_payment_to_gl(bill, amount):
+    """Debit Cash, Credit Service Revenue for a payment received. Looks up
+    the default sub-accounts by name (seeded by migration/schema.sql) —
+    if either has been renamed or deleted, this quietly skips posting
+    rather than breaking the payment itself. Billing and Accounts are
+    still two separate systems; this is a light integration, not a
+    dependency — a payment must always be recordable even if the books
+    aren't set up (yet, or on purpose)."""
+    cash = AccountSubAccount.find_by_sub_account_name("Cash")
+    revenue = AccountSubAccount.find_by_sub_account_name("Service Revenue")
+    if not cash or not revenue:
+        return " (GL posting skipped — default Cash/Service Revenue accounts not found; see Accounts settings.)"
+
+    period = FiscalPeriod.get_or_create_current()
+    voucher = JournalVoucher(
+        description=f"Payment received — {bill.medical_bill_no}",
+        source_reference=bill.medical_bill_no,
+        fiscal_period_id=period.fiscal_period_id,
+        created_by=current_user.system_user_id,
+    )
+    db.session.add(voucher)
+    db.session.flush()
+    db.session.add(SubaccountEntry(
+        journal_voucher_id=voucher.journal_voucher_id, acc_sub_acc_id=cash.acc_sub_acc_id,
+        entry_type="Debit", amount=amount, fiscal_period_id=period.fiscal_period_id,
+    ))
+    db.session.add(SubaccountEntry(
+        journal_voucher_id=voucher.journal_voucher_id, acc_sub_acc_id=revenue.acc_sub_acc_id,
+        entry_type="Credit", amount=amount, fiscal_period_id=period.fiscal_period_id,
+    ))
+    return ""
 
 
 # ── Service catalog (simple admin CRUD) ─────────────────────────────────

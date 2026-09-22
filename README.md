@@ -263,6 +263,38 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## Billing → General Ledger integration
+
+Recording a payment (`billing.record_payment`) now posts a journal voucher
+automatically: **Debit Cash, Credit Service Revenue**, for the amount
+received. This closes the gap flagged when the GL was first built — the
+two systems were sitting side by side without talking.
+
+**How it stays safe rather than becoming a hard dependency:** the posting
+looks up two sub-accounts *by name* — `Cash` and `Service Revenue` — seeded
+by default (see below). If you rename or delete either one while
+restructuring your Chart of Accounts, payments still record fine; the GL
+posting is silently skipped and the flash message tells you so
+("GL posting skipped — default Cash/Service Revenue accounts not found").
+A payment must always be recordable even if the books aren't set up.
+
+**This is a deliberately minimal default, not real accounting advice** —
+one cash account, one revenue account, no differentiation between OPD
+consultation revenue vs pharmacy revenue vs lab revenue, no accounts
+receivable entry for insurance/credit sales. It's enough to prove the
+integration works and give you a real running Cash ledger
+(`/accounts/ledger/<id>` on the Cash sub-account shows every payment ever
+recorded). Restructure the Chart of Accounts to match how your business
+actually wants to track revenue whenever you're ready — the posting logic
+will follow whatever you name `Cash` and `Service Revenue` as, or you can
+edit `_post_payment_to_gl()` in `app/routes/billing.py` for anything more
+specific (e.g. separate revenue accounts per module).
+
+Run `migrations/migration_seed_default_accounts.sql` on an existing
+database (safe to run even if you've already customized your accounts —
+it only creates what's missing). Fresh installs: `schema.sql` seeds it
+already.
+
 ## Accounts — General Ledger (core)
 
 Source: `tblaccounttypes`, `tblaccounts`, `tblsubaccounts`, `tblaccsubacc`,
@@ -306,12 +338,11 @@ Asset, Liability, Equity, Income, Expense).
   real, separate original module (matching a bank statement against book
   balances) and genuinely weren't built here. This GL core is the
   foundation it would sit on top of.
-- **Automatic posting from Billing/Pharmacy/Lab** — recording a bill
-  payment does not create a journal voucher yet. The two systems are
-  parallel right now, not integrated. Wiring "cash sale → Debit Cash,
-  Credit Revenue" automatically is a real design decision (which accounts,
-  which sub-accounts) that shouldn't be invented silently — flag it
-  explicitly when you're ready for that.
+- **Only payments post automatically, and only at a single-account level**
+  — see "Billing → General Ledger integration" below. Pharmacy dispensing
+  and Lab results still don't post their own entries (e.g. cost-of-goods
+  for dispensed drugs), and there's no per-module revenue split (OPD vs
+  Pharmacy vs Lab all land in one "Service Revenue" account today).
 - **Closing periods** — `fiscal_periods.is_closed` exists but nothing sets
   it or blocks entries into a closed period.
 - **Trial balance / financial statements** — the original has dedicated

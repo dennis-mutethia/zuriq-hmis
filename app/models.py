@@ -187,6 +187,19 @@ class AccountSubAccount(db.Model):
     def display_name(self):
         return f"{self.account.account_no} — {self.account.name} / {self.sub_account.name}"
 
+    @staticmethod
+    def find_by_sub_account_name(name):
+        """Used by integrations (e.g. Billing) that post to a well-known
+        sub-account by name. Returns None if it's been renamed or
+        deleted — callers must handle that by skipping the post, not
+        crashing, since accounts are user-editable."""
+        return (
+            AccountSubAccount.query
+            .join(SubAccount)
+            .filter(SubAccount.name == name)
+            .first()
+        )
+
 
 class FiscalPeriod(db.Model):
     __tablename__ = "fiscal_periods"

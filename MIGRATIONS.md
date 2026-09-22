@@ -25,6 +25,7 @@ before it.
 | 12 | `migration_add_nursing.sql` | #2, #4 | `nurse_triage`, `observation_charts` |
 | 13 | `migration_add_queue.sql` | #2 | `rooms`, `queue_entries` (seeds 6 default rooms) |
 | 14 | `migration_add_general_ledger.sql` | `system_users` table already exists | `account_types`, `accounts`, `sub_accounts`, `account_sub_accounts`, `fiscal_periods`, `journal_vouchers`, `subaccount_entries` (seeds 5 account types) |
+| 15 | `migration_seed_default_accounts.sql` | #14 | Default `Cash`/`Service Revenue` accounts, used by the Billing payment integration |
 
 **Skip `migration_add_roles.sql` entirely** if you haven't already run it —
 `migration_roles_table.sql` (step 9) supersedes it and does the equivalent

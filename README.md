@@ -1,5 +1,9 @@
 # Zuriq-HMIS → Flask: Patient Registration Module
 
+**Setting up a database?** See `MIGRATIONS.md` for the exact order to run
+things in — there are 11+ migration files now and several depend on each
+other. Fresh installs still just need `schema.sql`.
+
 First working module of the Carepoint rebuild — patient registration, backed
 by Supabase (PostgreSQL).
 

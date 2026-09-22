@@ -24,7 +24,15 @@ _ICONS = {
 
 
 def nav_link(endpoint, label, icon):
-    is_active = request.blueprint == endpoint.split(".")[0]
+    blueprint = endpoint.split(".")[0]
+    if blueprint == "billing":
+        billing_groups = {
+            "billing.list_bills": {"billing.list_bills", "billing.new_bill_for_visit", "billing.view_bill", "billing.record_payment"},
+            "billing.list_services": {"billing.list_services", "billing.new_service"},
+        }
+        is_active = request.endpoint in billing_groups.get(endpoint, {endpoint})
+    else:
+        is_active = request.blueprint == blueprint
     base_classes = "nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
     state_classes = (
         "bg-brand-50 text-brand-700"

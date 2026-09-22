@@ -263,6 +263,50 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## Procurement — Purchase Orders & GRNs
+
+Source: `tblpurchaseorders`, `tblpurchaseorderitems`, `tblgrns`,
+`tblgrnitems`. This is the formal counterpart to the ad-hoc "Receive
+Stock" button built earlier in Pharmacy — that stays for quick, casual
+restocking with no paper trail; this is for tracking what was actually
+ordered vs. what arrived, with batch number and expiry date capture
+(important for pharmaceutical stock).
+
+**Flow:** `/procurement` → New Purchase Order (pick supplier, add product
+lines with quantity/rate) → optionally "Mark Checked" (a lightweight
+approval flag, not a hard gate — see deferred below) → "Receive Goods
+(GRN)" when the delivery arrives (enter actual quantity received per
+line, which can differ from what was ordered, plus batch/expiry) →
+**Commit to Stock**, the deliberate final step that actually updates
+`quantity_in_stock` and logs a `stock_movements` entry. Stock isn't
+touched until that commit, so you can review a GRN before it affects your
+live inventory count.
+
+Same modernization as the GL's `EntryType` earlier: `HasBeenChecked`,
+`HasBeenReceived`, and `IsCommittedToStock` were raw `0`/`1` integers in
+the original — proper `BOOLEAN` here.
+
+Run `migrations/migration_add_procurement.sql` on an existing database
+(needs Suppliers and Products already set up), or `schema.sql` for fresh
+installs.
+
+### What's intentionally deferred (Procurement)
+
+- **Approval enforcement** — "Mark Checked" is a visible flag, not a hard
+  gate; you can create a GRN against an unchecked PO. Real approval
+  workflows (who's allowed to check, blocking receipt until checked) would
+  need the Roles system extended first.
+- **Partial-delivery tracking beyond a second GRN** — multiple GRNs
+  against one PO work (leave "Received" at 0 for undelivered lines), but
+  there's no rollup view showing "80% of this PO has arrived" at a glance.
+- **Procurement → GL posting** — receiving stock doesn't create an
+  accounts-payable journal voucher (Debit Inventory/Expense, Credit
+  Accounts Payable); same situation Billing and HR were in before their
+  own GL integrations.
+- **Supplier invoice reconciliation** — `ap_invoice_no` is captured on the
+  GRN as a reference field, but nothing matches it against an actual
+  payable balance.
+
 ## HR — Employees & Payroll
 
 Source: `tblemployees`, `tblemploymenttypes`, `tblpayrollparametercategories`,

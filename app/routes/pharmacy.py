@@ -175,6 +175,24 @@ def list_suppliers():
     return render_template("pharmacy/suppliers.html", suppliers=suppliers)
 
 
+@pharmacy_bp.route("/suppliers/<int:supplier_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_supplier(supplier_id):
+    supplier = Supplier.query.get_or_404(supplier_id)
+
+    if request.method == "POST":
+        supplier.name = request.form["name"].strip()
+        supplier.contact_person = request.form.get("contact_person") or None
+        supplier.telephone = request.form.get("telephone") or None
+        supplier.email = request.form.get("email") or None
+        supplier.is_active = bool(request.form.get("is_active"))
+        db.session.commit()
+        flash(f"Supplier '{supplier.name}' updated.", "success")
+        return redirect(url_for("pharmacy.list_suppliers"))
+
+    return render_template("pharmacy/supplier_form.html", supplier=supplier)
+
+
 @pharmacy_bp.route("/suppliers/new", methods=["GET", "POST"])
 @login_required
 def new_supplier():

@@ -26,7 +26,8 @@ before it.
 | 13 | `migration_add_queue.sql` | #2 | `rooms`, `queue_entries` (seeds 6 default rooms) |
 | 14 | `migration_add_general_ledger.sql` | `system_users` table already exists | `account_types`, `accounts`, `sub_accounts`, `account_sub_accounts`, `fiscal_periods`, `journal_vouchers`, `subaccount_entries` (seeds 5 account types) |
 | 15 | `migration_seed_default_accounts.sql` | #14 | Default `Cash`/`Service Revenue` accounts, used by the Billing payment integration |
-| 16 | `migration_add_hr_payroll.sql` | `id_types` table already exists | `departments`, `employment_types`, `employees`, `payroll_parameter_categories`, `payroll_parameters`, `employee_payroll_parameters`, `payslip_periods`, `payslips`, `payslip_items` |
+| 16 | `migration_add_hr_payroll.sql` | `id_types` table already exists | `departments`, `employment_types`, `employees`, `payroll_parameter_categories`, `payroll_parameters`, `employee_payroll_parameters`, `payslip_periods`, `payslips`, `payslip_items` (seeds employment types + Basic Salary parameter) |
+| 17 | `migration_add_procurement.sql` | #10, #11 (Suppliers, Pharmacy) | `purchase_orders`, `purchase_order_items`, `grns`, `grn_items` |
 
 **Skip `migration_add_roles.sql` entirely** if you haven't already run it —
 `migration_roles_table.sql` (step 9) supersedes it and does the equivalent

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ grn.grn_no }} — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Procurement{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-semibold text-ink">{{ grn.grn_no }}</h1>
+        <p class="text-sm text-muted">
+            Against <a href="{{ url_for('procurement.view_purchase_order', purchase_order_id=grn.purchase_order_id) }}" class="text-brand-600 hover:underline">{{ grn.purchase_order.purchase_order_no }}</a>
+            · {{ grn.date_time_created.strftime("%d %b %Y") }}
+        </p>
+    </div>
+    {% if grn.is_committed_to_stock %}
+    <span class="text-sm bg-success/10 text-success px-3 py-1 rounded-full">Committed to stock</span>
+    {% else %}
+    <form method="post" action="{{ url_for('procurement.commit_grn', grn_id=grn.grn_id) }}">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Commit to Stock
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Product</th>
+                <th class="px-4 py-3 text-right">Ordered</th>
+                <th class="px-4 py-3 text-right">Received</th>
+                <th class="px-4 py-3">Batch No.</th>
+                <th class="px-4 py-3">Expiry</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for item in grn.items %}
+            <tr>
+                <td class="px-4 py-3 font-medium">{{ item.product.name }}</td>
+                <td class="px-4 py-3 text-right font-mono">{{ item.quantity_ordered or "—" }}</td>
+                <td class="px-4 py-3 text-right font-mono font-medium">{{ item.quantity_received }}</td>
+                <td class="px-4 py-3 font-mono">{{ item.batch_no or "—" }}</td>
+                <td class="px-4 py-3">{{ item.earliest_expiry_date.strftime("%d %b %Y") if item.earliest_expiry_date else "—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if not grn.is_committed_to_stock %}
+<p class="text-xs text-muted/60 mt-4">
+    Stock isn't updated until you commit — this lets you review a delivery before it affects your live inventory count.
+</p>
+{% endif %}
+
+{% endblock %}

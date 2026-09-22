@@ -1,32 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Add Supplier — Zuriq-HMIS{% endblock %}
+{% block title %}{{ "Edit" if supplier else "Add" }} Supplier — Zuriq-HMIS{% endblock %}
 {% block breadcrumb %}Pharmacy{% endblock %}
 {% block content %}
 
-<h1 class="text-2xl font-semibold text-ink mb-6">Add Supplier</h1>
+<h1 class="text-2xl font-semibold text-ink mb-6">{{ "Edit Supplier" if supplier else "Add Supplier" }}</h1>
 
 <form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-lg space-y-4">
     <div>
         <label class="block text-sm text-muted mb-1">Name *</label>
-        <input name="name" required autofocus class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <input name="name" required autofocus value="{{ (supplier and supplier.name) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
     </div>
     <div>
         <label class="block text-sm text-muted mb-1">Contact Person</label>
-        <input name="contact_person" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        <input name="contact_person" value="{{ (supplier and supplier.contact_person) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
     </div>
     <div class="grid grid-cols-2 gap-4">
         <div>
             <label class="block text-sm text-muted mb-1">Telephone</label>
-            <input name="telephone" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input name="telephone" value="{{ (supplier and supplier.telephone) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
             <label class="block text-sm text-muted mb-1">Email</label>
-            <input type="email" name="email" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <input type="email" name="email" value="{{ (supplier and supplier.email) or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
         </div>
     </div>
+    {% if supplier %}
+    <label class="flex items-center gap-2 text-sm text-muted">
+        <input type="checkbox" name="is_active" {% if supplier.is_active %}checked{% endif %} class="rounded border-ink/20">
+        Active (inactive suppliers won't appear when receiving stock)
+    </label>
+    {% endif %}
     <div class="flex items-center gap-3 pt-2">
         <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
-            Save Supplier
+            {{ "Save Changes" if supplier else "Save Supplier" }}
         </button>
         <a href="{{ url_for('pharmacy.list_suppliers') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
     </div>

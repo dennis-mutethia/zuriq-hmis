@@ -382,6 +382,83 @@ class SubaccountEntry(db.Model):
     acc_sub_acc = db.relationship("AccountSubAccount")
 
 
+class PurchaseOrder(db.Model):
+    __tablename__ = "purchase_orders"
+
+    purchase_order_id = db.Column(db.Integer, primary_key=True)
+    purchase_order_no = db.Column(db.Text, unique=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.supplier_id"), nullable=False)
+    order_reference = db.Column(db.Text)
+    prepared_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    checked_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    date_time_issued = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    date_time_checked = db.Column(db.DateTime(timezone=True))
+    has_been_checked = db.Column(db.Boolean, nullable=False, default=False)
+    has_been_received = db.Column(db.Boolean, nullable=False, default=False)
+    delivery_note_no = db.Column(db.Text)
+    invoice_no = db.Column(db.Text)
+    terms_conditions = db.Column(db.Text)
+    validity_date = db.Column(db.Date)
+
+    supplier = db.relationship("Supplier")
+    prepared_by_user = db.relationship("SystemUser", foreign_keys=[prepared_by])
+    checked_by_user = db.relationship("SystemUser", foreign_keys=[checked_by])
+    items = db.relationship("PurchaseOrderItem", backref="purchase_order", cascade="all, delete-orphan")
+    grns = db.relationship("GRN", backref="purchase_order")
+
+    @property
+    def total_amount(self):
+        return sum((i.amount for i in self.items), Decimal("0"))
+
+
+class PurchaseOrderItem(db.Model):
+    __tablename__ = "purchase_order_items"
+
+    purchase_order_item_id = db.Column(db.Integer, primary_key=True)
+    purchase_order_id = db.Column(db.Integer, db.ForeignKey("purchase_orders.purchase_order_id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.product_id"))
+    name = db.Column(db.Text, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    rate = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    amount = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+
+    product = db.relationship("Product")
+
+
+class GRN(db.Model):
+    __tablename__ = "grns"
+
+    grn_id = db.Column(db.Integer, primary_key=True)
+    grn_no = db.Column(db.Text, unique=True)
+    purchase_order_id = db.Column(db.Integer, db.ForeignKey("purchase_orders.purchase_order_id"), nullable=False)
+    delivery_note_no = db.Column(db.Text)
+    ap_invoice_no = db.Column(db.Text)
+    date_time_created = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    has_been_checked = db.Column(db.Boolean, nullable=False, default=False)
+    is_committed_to_stock = db.Column(db.Boolean, nullable=False, default=False)
+    created_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+
+    created_by_user = db.relationship("SystemUser")
+    items = db.relationship("GRNItem", backref="grn", cascade="all, delete-orphan")
+
+
+class GRNItem(db.Model):
+    __tablename__ = "grn_items"
+
+    grn_item_id = db.Column(db.Integer, primary_key=True)
+    grn_id = db.Column(db.Integer, db.ForeignKey("grns.grn_id"), nullable=False)
+    purchase_order_item_id = db.Column(db.Integer, db.ForeignKey("purchase_order_items.purchase_order_item_id"))
+    product_id = db.Column(db.Integer, db.ForeignKey("products.product_id"), nullable=False)
+    quantity_ordered = db.Column(db.Integer)
+    quantity_received = db.Column(db.Integer, nullable=False, default=0)
+    rate = db.Column(db.Numeric(14, 2), nullable=False, default=0)
+    batch_no = db.Column(db.Text)
+    earliest_expiry_date = db.Column(db.Date)
+
+    purchase_order_item = db.relationship("PurchaseOrderItem")
+    product = db.relationship("Product")
+
+
 class Room(db.Model):
     __tablename__ = "rooms"
     room_id = db.Column(db.Integer, primary_key=True)

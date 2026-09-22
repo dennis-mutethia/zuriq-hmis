@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Record Deposit — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Record Bank Deposit</h1>
+
+{% if not acc_sub_accs %}
+<div class="bg-warn/10 border border-warn/20 text-warn rounded-lg px-4 py-3 text-sm mb-6">
+    No sub-accounts linked to any account yet — set up your
+    <a href="{{ url_for('accounts.chart_of_accounts') }}" class="underline font-medium">Chart of Accounts</a> first.
+</div>
+{% endif %}
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-lg space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Deposit Into *</label>
+        <select name="dest_acc_sub_acc_id" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <option value="">— Select bank sub-account —</option>
+            {% for asa in acc_sub_accs %}
+            <option value="{{ asa.acc_sub_acc_id }}">{{ asa.display_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Source (usually Cash)</label>
+        <select name="source_acc_sub_acc_id" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <option value="">— None (don't post to GL) —</option>
+            {% for asa in acc_sub_accs %}
+            <option value="{{ asa.acc_sub_acc_id }}">{{ asa.display_name }}</option>
+            {% endfor %}
+        </select>
+        <p class="text-xs text-muted/60 mt-1">
+            If set, this posts a balanced journal voucher automatically: Debit the destination, Credit this source.
+        </p>
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Amount (KES) *</label>
+        <input type="number" step="0.01" min="0.01" name="amount" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">Bank Transaction Ref.</label>
+            <input name="bank_transaction_ref_no" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Cheque No(s).</label>
+            <input name="cheque_nos" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Record Deposit
+        </button>
+        <a href="{{ url_for('accounts.list_deposits') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

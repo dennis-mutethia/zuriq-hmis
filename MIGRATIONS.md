@@ -28,6 +28,7 @@ before it.
 | 15 | `migration_seed_default_accounts.sql` | #14 | Default `Cash`/`Service Revenue` accounts, used by the Billing payment integration |
 | 16 | `migration_add_hr_payroll.sql` | `id_types` table already exists | `departments`, `employment_types`, `employees`, `payroll_parameter_categories`, `payroll_parameters`, `employee_payroll_parameters`, `payslip_periods`, `payslips`, `payslip_items` (seeds employment types + Basic Salary parameter) |
 | 17 | `migration_add_procurement.sql` | #10, #11 (Suppliers, Pharmacy) | `purchase_orders`, `purchase_order_items`, `grns`, `grn_items` |
+| 18 | `migration_add_banking.sql` | #14 (General Ledger) | `banks`, `bank_branches`, `bank_deposits`, `bank_reconciliations`, `bank_rec_items` |
 
 **Skip `migration_add_roles.sql` entirely** if you haven't already run it —
 `migration_roles_table.sql` (step 9) supersedes it and does the equivalent

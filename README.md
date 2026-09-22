@@ -263,6 +263,47 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## Banking — Deposits & Reconciliation
+
+Source: `tblbanks`, `tblbankbranch`, `tblbankdeposits`, `tblbankrec`,
+`tblbankrecitems`. This was the piece explicitly deferred when the GL core
+was first built — here it is.
+
+**One modernization worth flagging:** the original tracks
+`IsBankAdjustingItem` and `IsBookAdjustingItem` as two separate 0/1
+integers. They're logically mutually exclusive — a reconciling item either
+explains a timing gap on the bank's side (an uncleared cheque, a deposit
+in transit — no book entry needed) or needs recording in your books (a
+bank charge, a standing order the bank processed that you haven't logged
+yet). Two overlapping booleans invite an invalid state (both true, or
+both false); modernized to one `CHECK ('bank', 'book')` column.
+
+- **`/accounts/banks`** — banks and branches, simple admin
+- **`/accounts/deposits`** — record a deposit into a bank sub-account. If
+  you also pick a source (usually "Cash"), it posts a balanced journal
+  voucher automatically: Debit the destination, Credit the source. Leave
+  the source blank to just log the deposit without touching the GL.
+- **`/accounts/reconciliation`** — start a session for a bank sub-account
+  and date range with your book balance and the bank statement balance,
+  then add reconciling items on either side. The two "Adjusted Balance"
+  totals must match before you can mark it reconciled — that's enforced
+  server-side, not just visually.
+
+Run `migrations/migration_add_banking.sql` on an existing database (needs
+the GL core already set up), or `schema.sql` for fresh installs.
+
+### What's intentionally deferred (Banking)
+
+- **Auto-matching reconciling items to specific ledger entries** —
+  `bank_rec_items.subaccount_entry_id` exists in the schema so an item can
+  link to a specific GL entry, but nothing in the UI does that matching
+  automatically; items are entered manually.
+- **Posting book-side adjustments** — the reconciliation screen tells you
+  a book-side item needs a journal voucher, but doesn't create one for
+  you; that's a separate step in `/accounts` → New Voucher.
+- **Multi-currency** — everything here assumes one currency (KES),
+  matching the rest of the app.
+
 ## Procurement — Purchase Orders & GRNs
 
 Source: `tblpurchaseorders`, `tblpurchaseorderitems`, `tblgrns`,

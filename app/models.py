@@ -459,6 +459,98 @@ class GRNItem(db.Model):
     product = db.relationship("Product")
 
 
+class Bank(db.Model):
+    __tablename__ = "banks"
+    bank_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    bank_code = db.Column(db.Text)
+
+
+class BankBranch(db.Model):
+    __tablename__ = "bank_branches"
+    bank_branch_id = db.Column(db.Integer, primary_key=True)
+    bank_id = db.Column(db.Integer, db.ForeignKey("banks.bank_id"), nullable=False)
+    name = db.Column(db.Text, nullable=False)
+    branch_code = db.Column(db.Text)
+
+    bank = db.relationship("Bank", backref="branches")
+
+
+class BankDeposit(db.Model):
+    __tablename__ = "bank_deposits"
+
+    bank_deposit_id = db.Column(db.Integer, primary_key=True)
+    dest_acc_sub_acc_id = db.Column(db.Integer, db.ForeignKey("account_sub_accounts.acc_sub_acc_id"), nullable=False)
+    source_acc_sub_acc_id = db.Column(db.Integer, db.ForeignKey("account_sub_accounts.acc_sub_acc_id"))
+    journal_voucher_id = db.Column(db.Integer, db.ForeignKey("journal_vouchers.journal_voucher_id"))
+    amount = db.Column(db.Numeric(14, 2), nullable=False)
+    bank_transaction_ref_no = db.Column(db.Text)
+    cheque_nos = db.Column(db.Text)
+    deposited_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    date_time_deposited = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    dest_acc_sub_acc = db.relationship("AccountSubAccount", foreign_keys=[dest_acc_sub_acc_id])
+    source_acc_sub_acc = db.relationship("AccountSubAccount", foreign_keys=[source_acc_sub_acc_id])
+    journal_voucher = db.relationship("JournalVoucher")
+    deposited_by_user = db.relationship("SystemUser")
+
+
+class BankReconciliation(db.Model):
+    __tablename__ = "bank_reconciliations"
+
+    bank_rec_id = db.Column(db.Integer, primary_key=True)
+    acc_sub_acc_id = db.Column(db.Integer, db.ForeignKey("account_sub_accounts.acc_sub_acc_id"), nullable=False)
+    from_date = db.Column(db.Date, nullable=False)
+    to_date = db.Column(db.Date, nullable=False)
+    book_balance = db.Column(db.Numeric(14, 2), nullable=False)
+    statement_balance = db.Column(db.Numeric(14, 2), nullable=False)
+    has_been_reconciled = db.Column(db.Boolean, nullable=False, default=False)
+    reconciled_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    reconciled_at = db.Column(db.DateTime(timezone=True))
+
+    acc_sub_acc = db.relationship("AccountSubAccount")
+    reconciled_by_user = db.relationship("SystemUser")
+    items = db.relationship("BankRecItem", backref="bank_rec", cascade="all, delete-orphan")
+
+    @property
+    def adjusted_book_balance(self):
+        total = Decimal(self.book_balance or 0)
+        for i in self.items:
+            if i.side == "book":
+                total += i.amount if i.is_increment else -i.amount
+        return total
+
+    @property
+    def adjusted_bank_balance(self):
+        total = Decimal(self.statement_balance or 0)
+        for i in self.items:
+            if i.side == "bank":
+                total += i.amount if i.is_increment else -i.amount
+        return total
+
+    @property
+    def is_balanced(self):
+        return self.adjusted_book_balance == self.adjusted_bank_balance
+
+    @property
+    def difference(self):
+        return self.adjusted_book_balance - self.adjusted_bank_balance
+
+
+class BankRecItem(db.Model):
+    __tablename__ = "bank_rec_items"
+
+    bank_rec_item_id = db.Column(db.Integer, primary_key=True)
+    bank_rec_id = db.Column(db.Integer, db.ForeignKey("bank_reconciliations.bank_rec_id"), nullable=False)
+    subaccount_entry_id = db.Column(db.Integer, db.ForeignKey("subaccount_entries.subaccount_entry_id"))
+    description = db.Column(db.Text, nullable=False)
+    amount = db.Column(db.Numeric(14, 2), nullable=False)
+    side = db.Column(db.Text, nullable=False)
+    is_increment = db.Column(db.Boolean, nullable=False, default=True)
+
+    subaccount_entry = db.relationship("SubaccountEntry")
+
+
 class Room(db.Model):
     __tablename__ = "rooms"
     room_id = db.Column(db.Integer, primary_key=True)

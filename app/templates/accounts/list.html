@@ -8,6 +8,9 @@
     <div class="flex items-center gap-4">
         <a href="{{ url_for('accounts.chart_of_accounts') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Chart of Accounts</a>
         <a href="{{ url_for('accounts.list_sub_accounts') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Sub-Accounts</a>
+        <a href="{{ url_for('accounts.list_banks') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Banks</a>
+        <a href="{{ url_for('accounts.list_deposits') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Deposits</a>
+        <a href="{{ url_for('accounts.list_reconciliations') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Reconciliation</a>
         <a href="{{ url_for('accounts.new_voucher') }}"
            class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
             + New Voucher

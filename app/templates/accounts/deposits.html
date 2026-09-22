@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Bank Deposits — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Bank Deposits</h1>
+    <a href="{{ url_for('accounts.new_deposit') }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition">
+        + Record Deposit
+    </a>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 overflow-hidden">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Date</th>
+                <th class="px-4 py-3">Into</th>
+                <th class="px-4 py-3">Reference</th>
+                <th class="px-4 py-3 text-right">Amount</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for d in deposits %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 text-muted">{{ d.date_time_deposited.strftime("%d %b %Y") }}</td>
+                <td class="px-4 py-3">{{ d.dest_acc_sub_acc.display_name }}</td>
+                <td class="px-4 py-3 text-muted">{{ d.bank_transaction_ref_no or "—" }}</td>
+                <td class="px-4 py-3 text-right font-mono">{{ "%.2f"|format(d.amount) }}</td>
+                <td class="px-4 py-3 text-right">
+                    {% if d.journal_voucher %}
+                    <a href="{{ url_for('accounts.view_voucher', journal_voucher_id=d.journal_voucher_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Voucher</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-muted/60">No deposits recorded yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

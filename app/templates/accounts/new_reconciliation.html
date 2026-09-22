@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}New Reconciliation — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Accounts{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-6">Start Bank Reconciliation</h1>
+
+<form method="post" class="bg-white rounded-xl border border-ink/10 p-6 max-w-lg space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Account *</label>
+        <select name="acc_sub_acc_id" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <option value="">— Select bank sub-account —</option>
+            {% for asa in acc_sub_accs %}
+            <option value="{{ asa.acc_sub_acc_id }}">{{ asa.display_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">From *</label>
+            <input type="date" name="from_date" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">To *</label>
+            <input type="date" name="to_date" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+        </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-muted mb-1">Book Balance (KES) *</label>
+            <input type="number" step="0.01" name="book_balance" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <p class="text-xs text-muted/60 mt-1">From this account's ledger as of the "To" date.</p>
+        </div>
+        <div>
+            <label class="block text-sm text-muted mb-1">Statement Balance (KES) *</label>
+            <input type="number" step="0.01" name="statement_balance" required class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
+            <p class="text-xs text-muted/60 mt-1">From the actual bank statement.</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Start Reconciliation
+        </button>
+        <a href="{{ url_for('accounts.list_reconciliations') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

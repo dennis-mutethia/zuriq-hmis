@@ -275,6 +275,75 @@ INSERT INTO account_sub_accounts (account_id, sub_account_id) VALUES
     ((SELECT account_id FROM accounts WHERE account_no = '1000'), (SELECT sub_account_id FROM sub_accounts WHERE name = 'Cash')),
     ((SELECT account_id FROM accounts WHERE account_no = '4000'), (SELECT sub_account_id FROM sub_accounts WHERE name = 'Service Revenue'));
 
+-- ── Module: Banking — Deposits & Reconciliation ──────────────────────────
+-- Source: tblbanks, tblbankbranch, tblbankdeposits, tblbankrec,
+-- tblbankrecitems. The deferred piece from the GL module. Placed here,
+-- right after GL core, since it depends on account_sub_accounts and
+-- subaccount_entries which only exist from that point on.
+--
+-- IsBankAdjustingItem/IsBookAdjustingItem were two separate 0/1 ints in
+-- the original — logically mutually exclusive (an item either explains a
+-- timing difference on the bank's side, like an uncleared cheque, or
+-- needs recording in the books, like a bank charge), so modernized to one
+-- CHECK('bank','book') column rather than two overlapping booleans.
+-- HasBeenReconciled was also a raw int — proper BOOLEAN here.
+
+CREATE TABLE banks (
+    bank_id     SERIAL PRIMARY KEY,
+    name         TEXT NOT NULL,
+    bank_code      TEXT
+);
+
+CREATE TABLE bank_branches (
+    bank_branch_id  SERIAL PRIMARY KEY,
+    bank_id           INTEGER NOT NULL REFERENCES banks(bank_id),
+    name                TEXT NOT NULL,
+    branch_code           TEXT
+);
+
+CREATE TABLE bank_deposits (
+    bank_deposit_id       SERIAL PRIMARY KEY,
+    dest_acc_sub_acc_id     INTEGER NOT NULL REFERENCES account_sub_accounts(acc_sub_acc_id),  -- the bank sub-account deposited into
+    source_acc_sub_acc_id     INTEGER REFERENCES account_sub_accounts(acc_sub_acc_id),          -- usually 'Cash' — where the money came from
+    journal_voucher_id           INTEGER REFERENCES journal_vouchers(journal_voucher_id),
+    amount                          NUMERIC(14,2) NOT NULL CHECK (amount > 0),
+    bank_transaction_ref_no           TEXT,
+    cheque_nos                          TEXT,
+    deposited_by                          INTEGER REFERENCES system_users(system_user_id),
+    date_time_deposited                     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- One reconciliation session per bank sub-account per statement period.
+CREATE TABLE bank_reconciliations (
+    bank_rec_id       SERIAL PRIMARY KEY,
+    acc_sub_acc_id      INTEGER NOT NULL REFERENCES account_sub_accounts(acc_sub_acc_id),
+    from_date              DATE NOT NULL,
+    to_date                  DATE NOT NULL,
+    book_balance               NUMERIC(14,2) NOT NULL,
+    statement_balance            NUMERIC(14,2) NOT NULL,
+    has_been_reconciled            BOOLEAN NOT NULL DEFAULT FALSE,
+    reconciled_by                    INTEGER REFERENCES system_users(system_user_id),
+    reconciled_at                      TIMESTAMPTZ
+);
+
+-- Reconciling items: timing differences between the books and the bank
+-- statement (outstanding cheques, deposits in transit, bank charges not
+-- yet recorded, etc.)
+CREATE TABLE bank_rec_items (
+    bank_rec_item_id  SERIAL PRIMARY KEY,
+    bank_rec_id         INTEGER NOT NULL REFERENCES bank_reconciliations(bank_rec_id) ON DELETE CASCADE,
+    subaccount_entry_id   INTEGER REFERENCES subaccount_entries(subaccount_entry_id),  -- link to a specific ledger entry, if any
+    description             TEXT NOT NULL,
+    amount                    NUMERIC(14,2) NOT NULL,
+    side                        TEXT NOT NULL CHECK (side IN ('bank', 'book')),
+    is_increment                  BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE INDEX idx_bank_branches_bank_id ON bank_branches (bank_id);
+CREATE INDEX idx_bank_deposits_dest_acc_sub_acc_id ON bank_deposits (dest_acc_sub_acc_id);
+CREATE INDEX idx_bank_reconciliations_acc_sub_acc_id ON bank_reconciliations (acc_sub_acc_id);
+CREATE INDEX idx_bank_rec_items_bank_rec_id ON bank_rec_items (bank_rec_id);
+
 -- ── Module: Queue Management ─────────────────────────────────────────────
 -- Source: tbltempqueue. The original stores room names as free text and
 -- waiting/service/total time as separately-stored integers (computed once,

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
@@ -5,6 +6,7 @@ from app import db
 from app.models import (
     AccountType, Account, SubAccount, AccountSubAccount,
     FiscalPeriod, JournalVoucher, SubaccountEntry,
+    Bank, BankBranch, BankDeposit, BankReconciliation, BankRecItem,
 )
 
 accounts_bp = Blueprint("accounts", __name__, url_prefix="/accounts")
@@ -178,3 +180,165 @@ def ledger(acc_sub_acc_id):
 def list_periods():
     periods = FiscalPeriod.query.order_by(FiscalPeriod.start_date.desc()).all()
     return render_template("accounts/periods.html", periods=periods)
+
+
+# ── Banking: banks/branches (simple admin) ───────────────────────────────
+
+@accounts_bp.route("/banks")
+@login_required
+def list_banks():
+    banks = Bank.query.order_by(Bank.name).all()
+    return render_template("accounts/banks.html", banks=banks)
+
+
+@accounts_bp.route("/banks/new", methods=["GET", "POST"])
+@login_required
+def new_bank():
+    if request.method == "POST":
+        db.session.add(Bank(name=request.form["name"].strip(), bank_code=request.form.get("bank_code") or None))
+        db.session.commit()
+        flash("Bank added.", "success")
+        return redirect(url_for("accounts.list_banks"))
+    return render_template("accounts/bank_form.html")
+
+
+@accounts_bp.route("/banks/<int:bank_id>/branches/new", methods=["GET", "POST"])
+@login_required
+def new_bank_branch(bank_id):
+    bank = Bank.query.get_or_404(bank_id)
+    if request.method == "POST":
+        db.session.add(BankBranch(
+            bank_id=bank.bank_id,
+            name=request.form["name"].strip(),
+            branch_code=request.form.get("branch_code") or None,
+        ))
+        db.session.commit()
+        flash(f"Branch added to {bank.name}.", "success")
+        return redirect(url_for("accounts.list_banks"))
+    return render_template("accounts/bank_branch_form.html", bank=bank)
+
+
+# ── Bank Deposits ─────────────────────────────────────────────────────────
+
+@accounts_bp.route("/deposits")
+@login_required
+def list_deposits():
+    deposits = BankDeposit.query.order_by(BankDeposit.date_time_deposited.desc()).limit(200).all()
+    return render_template("accounts/deposits.html", deposits=deposits)
+
+
+@accounts_bp.route("/deposits/new", methods=["GET", "POST"])
+@login_required
+def new_deposit():
+    bank_sub_accs = AccountSubAccount.query.join(Account).order_by(Account.account_no).all()
+
+    if request.method == "POST":
+        amount = Decimal(request.form.get("amount", "0") or "0")
+        if amount <= 0:
+            flash("Enter an amount greater than zero.", "error")
+            return redirect(url_for("accounts.new_deposit"))
+
+        deposit = BankDeposit(
+            dest_acc_sub_acc_id=request.form["dest_acc_sub_acc_id"],
+            source_acc_sub_acc_id=request.form.get("source_acc_sub_acc_id") or None,
+            amount=amount,
+            bank_transaction_ref_no=request.form.get("bank_transaction_ref_no") or None,
+            cheque_nos=request.form.get("cheque_nos") or None,
+            deposited_by=current_user.system_user_id,
+        )
+
+        # Post a balanced GL entry if a source sub-account was given: Debit
+        # the destination (the deposit increases the bank account), Credit
+        # the source (usually Cash — the till decreases by the same amount).
+        if deposit.source_acc_sub_acc_id:
+            period = FiscalPeriod.get_or_create_current()
+            voucher = JournalVoucher(
+                description=f"Bank deposit — {request.form.get('bank_transaction_ref_no') or 'no reference'}",
+                fiscal_period_id=period.fiscal_period_id,
+                created_by=current_user.system_user_id,
+            )
+            db.session.add(voucher)
+            db.session.flush()
+            db.session.add(SubaccountEntry(
+                journal_voucher_id=voucher.journal_voucher_id, acc_sub_acc_id=deposit.dest_acc_sub_acc_id,
+                entry_type="Debit", amount=amount, fiscal_period_id=period.fiscal_period_id,
+            ))
+            db.session.add(SubaccountEntry(
+                journal_voucher_id=voucher.journal_voucher_id, acc_sub_acc_id=deposit.source_acc_sub_acc_id,
+                entry_type="Credit", amount=amount, fiscal_period_id=period.fiscal_period_id,
+            ))
+            deposit.journal_voucher_id = voucher.journal_voucher_id
+
+        db.session.add(deposit)
+        db.session.commit()
+        flash(f"Deposit of KES {amount:,.2f} recorded.", "success")
+        return redirect(url_for("accounts.list_deposits"))
+
+    return render_template("accounts/new_deposit.html", acc_sub_accs=bank_sub_accs)
+
+
+# ── Bank Reconciliation ───────────────────────────────────────────────────
+
+@accounts_bp.route("/reconciliation")
+@login_required
+def list_reconciliations():
+    recs = BankReconciliation.query.order_by(BankReconciliation.to_date.desc()).all()
+    return render_template("accounts/reconciliations.html", recs=recs)
+
+
+@accounts_bp.route("/reconciliation/new", methods=["GET", "POST"])
+@login_required
+def new_reconciliation():
+    if request.method == "POST":
+        rec = BankReconciliation(
+            acc_sub_acc_id=request.form["acc_sub_acc_id"],
+            from_date=request.form["from_date"],
+            to_date=request.form["to_date"],
+            book_balance=Decimal(request.form.get("book_balance", "0") or "0"),
+            statement_balance=Decimal(request.form.get("statement_balance", "0") or "0"),
+        )
+        db.session.add(rec)
+        db.session.commit()
+        flash("Reconciliation started.", "success")
+        return redirect(url_for("accounts.view_reconciliation", bank_rec_id=rec.bank_rec_id))
+
+    return render_template(
+        "accounts/new_reconciliation.html",
+        acc_sub_accs=AccountSubAccount.query.join(Account).order_by(Account.account_no).all(),
+    )
+
+
+@accounts_bp.route("/reconciliation/<int:bank_rec_id>", methods=["GET", "POST"])
+@login_required
+def view_reconciliation(bank_rec_id):
+    rec = BankReconciliation.query.get_or_404(bank_rec_id)
+
+    if request.method == "POST":
+        db.session.add(BankRecItem(
+            bank_rec_id=rec.bank_rec_id,
+            description=request.form["description"].strip(),
+            amount=Decimal(request.form.get("amount", "0") or "0"),
+            side=request.form["side"],
+            is_increment=(request.form.get("direction") == "increase"),
+        ))
+        db.session.commit()
+        flash("Reconciling item added.", "success")
+        return redirect(url_for("accounts.view_reconciliation", bank_rec_id=rec.bank_rec_id))
+
+    return render_template("accounts/view_reconciliation.html", rec=rec)
+
+
+@accounts_bp.route("/reconciliation/<int:bank_rec_id>/complete", methods=["POST"])
+@login_required
+def complete_reconciliation(bank_rec_id):
+    rec = BankReconciliation.query.get_or_404(bank_rec_id)
+    if not rec.is_balanced:
+        flash(f"Can't mark complete — adjusted balances differ by KES {rec.difference:,.2f}.", "error")
+        return redirect(url_for("accounts.view_reconciliation", bank_rec_id=rec.bank_rec_id))
+
+    rec.has_been_reconciled = True
+    rec.reconciled_by = current_user.system_user_id
+    rec.reconciled_at = datetime.now(timezone.utc)
+    db.session.commit()
+    flash("Reconciliation completed.", "success")
+    return redirect(url_for("accounts.list_reconciliations"))

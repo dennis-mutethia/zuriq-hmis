@@ -66,7 +66,7 @@ def call(queue_entry_id):
     entry.called_at = datetime.now(timezone.utc)
     db.session.commit()
     flash(f"{entry.visit.patient.full_name} called into {entry.to_room.name}.", "success")
-    return redirect(url_for("queue.board"))
+    return redirect(request.form.get("next") or url_for("queue.board"))
 
 
 @queue_bp.route("/<int:queue_entry_id>/complete", methods=["POST"])
@@ -78,7 +78,7 @@ def complete(queue_entry_id):
     entry.completed_at = datetime.now(timezone.utc)
     db.session.commit()
     flash(f"{entry.visit.patient.full_name} done at {entry.to_room.name}.", "success")
-    return redirect(url_for("queue.board"))
+    return redirect(request.form.get("next") or url_for("queue.board"))
 
 
 # ── Rooms (simple admin) ─────────────────────────────────────────────────
@@ -98,8 +98,21 @@ def new_room():
         if Room.query.filter_by(name=name).first():
             flash(f"A room named '{name}' already exists.", "error")
             return redirect(url_for("queue.new_room"))
-        db.session.add(Room(name=name))
+        db.session.add(Room(name=name, function=request.form.get("function") or None))
         db.session.commit()
         flash(f"Room '{name}' added.", "success")
         return redirect(url_for("queue.list_rooms"))
-    return render_template("queue/room_form.html")
+    return render_template("queue/room_form.html", room=None)
+
+
+@queue_bp.route("/rooms/<int:room_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_room(room_id):
+    room = Room.query.get_or_404(room_id)
+    if request.method == "POST":
+        room.name = request.form["name"].strip()
+        room.function = request.form.get("function") or None
+        db.session.commit()
+        flash(f"Room '{room.name}' updated.", "success")
+        return redirect(url_for("queue.list_rooms"))
+    return render_template("queue/room_form.html", room=room)

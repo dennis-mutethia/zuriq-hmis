@@ -263,6 +263,51 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## Room-Aware Queues (Triage / Consultation / Lab)
+
+Follow-up to the Queue integration above — this closes the gap where the
+functional screens could only see people **already** called in, and
+calling someone in still meant a trip to the main Queue board first.
+
+**Rooms are now tagged with a `function`** (`triage`, `consultation`,
+`lab`, `pharmacy`, `billing`, `reception`, or none for general-purpose) —
+set via `/queue/rooms` → Edit. More than one room can share a function
+(e.g. two physical consultation rooms both feed the Consultation screen).
+This is deliberately a tag the admin sets, not name-matching on the
+room's display text, since that's free-form and editable.
+
+- **Nursing (`/nursing`)**, **Consultation (`/visits/consultations`)**,
+  and **Lab (`/lab`)** each now show their **own** queue at the top —
+  everyone waiting *or* already called in, for rooms tagged with that
+  screen's function
+- **Call In now happens right there** — no detour through the main Queue
+  board. Clicking "Call In" posts to the same `queue.call` action as
+  before, just with a `next` parameter so it returns to the screen you
+  called it from instead of always landing on `/queue`
+- Once called in, the row's action becomes the actual clinical work:
+  "Record Triage", "Consult", or (for Lab) "Enter Results" if the doctor
+  already sent a pending test request for that visit, otherwise "Request
+  Tests" as a fallback
+- **The main Queue board (`/queue`) is unchanged** — still the full
+  cross-room overview, still where you'd look to see everything at once
+
+Existing installs: run `migrations/migration_add_room_functions.sql`. It
+auto-tags rooms named exactly "Triage", "Consultation", "Lab", etc.
+(matching the seeded defaults) — anything named differently needs tagging
+manually via `/queue/rooms`. Fresh installs: `schema.sql` already seeds
+the six default rooms with their functions set.
+
+### What's intentionally deferred (Room-Aware Queues)
+
+- **Pharmacy and Billing screens** aren't wired into this yet, even
+  though `pharmacy`/`billing` are valid function tags — Prescribe and
+  Bill are still reached only from the Visits list or Consultation
+  quick-actions, not from their own queue-aware view. Same pattern, just
+  not built into those two screens yet.
+- **Multiple rooms sharing a function** aren't visually grouped — if two
+  rooms are both tagged `consultation`, their entries appear together in
+  one list, distinguished only by the Room column.
+
 ## Doctor Consultation + Queue Integration
 
 Two real workflow gaps, closed together since they're related:
@@ -300,6 +345,38 @@ separately search Visits.
 
 Run `migrations/migration_add_diagnosis.sql` on an existing database (just
 adds `visits.diagnosis` — no new tables), or `schema.sql` for fresh installs.
+
+**Consultation now connects to Lab, Pharmacy, and Admissions directly** —
+"Send Patient To" on the consultation screen links to Order Lab Tests,
+Prescribe Medication, and Admit Patient (hidden once already admitted).
+Each of these existing routes now accepts an optional `?next=` — when
+launched from the consultation screen, saving returns you there instead
+of to that module's own list page, so a doctor can order a test, get
+bounced back, and keep consulting without losing their place. Launched
+from anywhere else (e.g. the Visits list), they behave exactly as before.
+
+**Lab results are now visible on the consultation screen**, the same way
+triage vitals already were. If a doctor ordered tests and the patient
+comes back (queued back into Consultation once results are ready), every
+lab request for that visit shows there — test name, result if entered,
+or "awaiting result" if the request isn't marked done yet. This closes
+the loop the "Called In" queue panel started: doctor orders labs → labs
+get done → patient re-enters the queue → doctor calls them back in → sees
+results right where they're consulting, no separate lookup required.
+
+**Follow-up additions:**
+- The consultation screen now shows **Lab Results inline**, same treatment
+  as Triage — every lab request for this visit, with each test's result
+  once entered, so the doctor doesn't need to leave the page to check.
+- **Send to Lab, Prescribe, and Admit** are now quick-action buttons
+  directly on the consultation screen — reusing the existing Lab/Pharmacy/
+  Admissions routes (test picking, prescribing, and admitting all work
+  exactly as they do from the Visits list; this just surfaces them where
+  the doctor already is).
+- Once lab results are marked done, the Lab results screen shows a
+  **"Queue Patient Back"** button — sends them back into the Queue (picking
+  whichever room makes sense, e.g. Consultation) so the doctor sees them
+  in the "Called In" panel again, same as any other queue call-in.
 
 ### What's intentionally deferred (Consultation)
 

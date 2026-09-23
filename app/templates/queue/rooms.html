@@ -17,9 +17,19 @@
             {% for r in rooms %}
             <tr class="hover:bg-canvas/60">
                 <td class="px-4 py-3 font-medium">{{ r.name }}</td>
+                <td class="px-4 py-3">
+                    {% if r.function %}
+                    <span class="text-xs bg-brand-50 text-brand-700 px-2 py-1 rounded-full">{{ r.function|capitalize }}</span>
+                    {% else %}
+                    <span class="text-xs text-muted/60">General</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('queue.edit_room', room_id=r.room_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Edit</a>
+                </td>
             </tr>
             {% else %}
-            <tr><td class="px-4 py-8 text-center text-muted/60">No rooms yet.</td></tr>
+            <tr><td colspan="3" class="px-4 py-8 text-center text-muted/60">No rooms yet.</td></tr>
             {% endfor %}
         </tbody>
     </table>

@@ -621,6 +621,7 @@ class Room(db.Model):
     __tablename__ = "rooms"
     room_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
+    function = db.Column(db.Text)  # 'triage' | 'consultation' | 'lab' | 'pharmacy' | 'billing' | 'reception' | None
 
 
 class QueueEntry(db.Model):
@@ -658,6 +659,20 @@ class QueueEntry(db.Model):
             return None
         end = self.completed_at or datetime.now(timezone.utc)
         return int((end - self.called_at).total_seconds() // 60)
+
+    @staticmethod
+    def for_room_function(function_name):
+        """Every not-yet-completed entry (waiting or in-service) queued
+        for a room tagged with this function — lets a screen like Nursing
+        or Consultation show and act on its own queue directly, without
+        matching on room display names."""
+        return (
+            QueueEntry.query
+            .join(Room, QueueEntry.to_room_id == Room.room_id)
+            .filter(Room.function == function_name, QueueEntry.completed_at.is_(None))
+            .order_by(QueueEntry.queued_at)
+            .all()
+        )
 
     @staticmethod
     def active_in_service():
@@ -1003,7 +1018,7 @@ class LabRequest(db.Model):
     reason_not_done = db.Column(db.Text)
 
     patient = db.relationship("Patient")
-    visit = db.relationship("Visit")
+    visit = db.relationship("Visit", backref="lab_requests")
     items = db.relationship("LabRequestItem", backref="lab_request", cascade="all, delete-orphan")
 
 

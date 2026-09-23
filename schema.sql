@@ -371,9 +371,15 @@ CREATE INDEX idx_bank_rec_items_bank_rec_id ON bank_rec_items (bank_rec_id);
 -- rooms is a proper lookup table, and times are computed from timestamps
 -- in the app layer rather than stored redundantly.
 
+-- `function` tags a room to a specific clinical/admin screen (Triage,
+-- Consultation, Lab, ...) so that screen can show and act on its own
+-- queue directly, without guessing from the room's display name (which
+-- is admin-editable free text and shouldn't be relied on for logic).
+-- NULL means a general-purpose room not tied to any specific screen.
 CREATE TABLE rooms (
     room_id    SERIAL PRIMARY KEY,
-    name       TEXT NOT NULL UNIQUE
+    name       TEXT NOT NULL UNIQUE,
+    function     TEXT CHECK (function IN ('triage', 'consultation', 'lab', 'pharmacy', 'billing', 'reception'))
 );
 
 CREATE TABLE queue_entries (
@@ -945,5 +951,12 @@ CREATE INDEX idx_lab_request_items_lab_request_id ON lab_request_items (lab_requ
 -- INSERT INTO id_types (id_type) VALUES ('National ID'), ('Passport'), ('Birth Certificate');
 
 -- A reasonable starting set of rooms for Queue Management — edit/add more via /queue/rooms.
-INSERT INTO rooms (name) VALUES
-    ('Reception'), ('Triage'), ('Consultation'), ('Lab'), ('Pharmacy'), ('Billing');
+-- Each is tagged with its function so the matching screen (Nursing,
+-- Consultation, Lab, ...) can show and act on its own queue directly.
+INSERT INTO rooms (name, function) VALUES
+    ('Reception', 'reception'),
+    ('Triage', 'triage'),
+    ('Consultation', 'consultation'),
+    ('Lab', 'lab'),
+    ('Pharmacy', 'pharmacy'),
+    ('Billing', 'billing');

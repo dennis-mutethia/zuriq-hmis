@@ -5,8 +5,8 @@
 
 <h1 class="text-2xl font-semibold text-ink mb-6">Nurse Triage</h1>
 
-{% if called_in %}
-<h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Called In — Waiting for Triage</h2>
+{% if queue_entries %}
+<h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Triage Queue</h2>
 <div class="bg-white rounded-xl border border-ink/10 overflow-x-auto mb-8">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">
@@ -14,19 +14,32 @@
                 <th class="px-4 py-3">Patient</th>
                 <th class="px-4 py-3">OP No.</th>
                 <th class="px-4 py-3">Room</th>
-                <th class="px-4 py-3">In Service</th>
+                <th class="px-4 py-3">Status</th>
                 <th class="px-4 py-3"></th>
             </tr>
         </thead>
         <tbody class="divide-y divide-ink/5">
-            {% for entry in called_in %}
+            {% for entry in queue_entries %}
             <tr class="hover:bg-canvas/60">
                 <td class="px-4 py-3 font-medium">{{ entry.visit.patient.full_name }}</td>
                 <td class="px-4 py-3 font-mono text-muted">{{ entry.visit.patient.out_patient_no or "—" }}</td>
                 <td class="px-4 py-3">{{ entry.to_room.name }}</td>
-                <td class="px-4 py-3 text-muted">{{ entry.service_minutes }}m</td>
+                <td class="px-4 py-3">
+                    {% if entry.status == 'waiting' %}
+                    <span class="text-xs bg-warn/10 text-warn px-2 py-1 rounded-full">Waiting {{ entry.waiting_minutes }}m</span>
+                    {% else %}
+                    <span class="text-xs bg-brand-50 text-brand-700 px-2 py-1 rounded-full">In Service {{ entry.service_minutes }}m</span>
+                    {% endif %}
+                </td>
                 <td class="px-4 py-3 text-right">
+                    {% if entry.status == 'waiting' %}
+                    <form method="post" action="{{ url_for('queue.call', queue_entry_id=entry.queue_entry_id) }}" class="inline">
+                        <input type="hidden" name="next" value="{{ url_for('nursing.list_triage') }}">
+                        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium px-3 py-1.5 rounded-md">Call In</button>
+                    </form>
+                    {% else %}
                     <a href="{{ url_for('nursing.new_triage', visit_id=entry.visit_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Record Triage</a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

@@ -3,7 +3,7 @@ from decimal import Decimal
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app import db
-from app.models import LabRequest, LabRequestItem, Test, Visit, MedicalBill
+from app.models import LabRequest, LabRequestItem, Test, Visit, MedicalBill, QueueEntry
 
 lab_bp = Blueprint("lab", __name__, url_prefix="/lab")
 
@@ -18,7 +18,20 @@ def list_requests():
     elif status == "done":
         query = query.filter_by(is_done=True)
     requests_ = query.order_by(LabRequest.date_time_requested.desc()).limit(200).all()
-    return render_template("lab/list.html", requests=requests_, status=status)
+
+    queue_entries = QueueEntry.for_room_function("lab")
+    # Each in-service entry should open the visit's pending lab request if
+    # one already exists (the doctor sent them here for a reason), rather
+    # than always dropping onto "create a new request".
+    pending_by_visit = {
+        r.visit_id: r for r in LabRequest.query.filter_by(is_done=False).all() if r.visit_id
+    }
+
+    return render_template(
+        "lab/list.html",
+        requests=requests_, status=status,
+        queue_entries=queue_entries, pending_by_visit=pending_by_visit,
+    )
 
 
 @lab_bp.route("/visit/<int:visit_id>/new", methods=["GET", "POST"])
@@ -52,7 +65,8 @@ def new_request(visit_id):
 
         db.session.commit()
         flash(f"Lab request created for {patient.full_name}.", "success")
-        return redirect(url_for("lab.list_requests"))
+        next_url = request.args.get("next")
+        return redirect(next_url or url_for("lab.list_requests"))
 
     return render_template(
         "lab/new.html",

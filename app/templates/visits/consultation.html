@@ -3,7 +3,19 @@
 {% block breadcrumb %}Consultation{% endblock %}
 {% block content %}
 
-<h1 class="text-2xl font-semibold text-ink mb-1">Consultation</h1>
+<div class="zh-action-row mb-1">
+    <h1 class="text-2xl font-semibold text-ink">Consultation</h1>
+    <div class="zh-action-links">
+        <a href="{{ url_for('lab.new_request', visit_id=visit.visit_id) }}"
+           class="text-sm bg-canvas hover:bg-ink/10 text-ink px-3 py-2 rounded-lg font-medium">Send to Lab</a>
+        <a href="{{ url_for('pharmacy.new_prescription', visit_id=visit.visit_id) }}"
+           class="text-sm bg-canvas hover:bg-ink/10 text-ink px-3 py-2 rounded-lg font-medium">Prescribe</a>
+        {% if not visit.is_admitted %}
+        <a href="{{ url_for('admissions.new_admission', visit_id=visit.visit_id) }}"
+           class="text-sm bg-canvas hover:bg-ink/10 text-ink px-3 py-2 rounded-lg font-medium">Admit</a>
+        {% endif %}
+    </div>
+</div>
 <p class="text-muted mb-6">
     {{ patient.full_name }} — OP: <span class="font-mono">{{ patient.out_patient_no }}</span> ·
     Visit: {{ visit.visit_datetime.strftime("%d %b %Y %H:%M") }}
@@ -24,6 +36,93 @@
 {% else %}
 <div class="bg-warn/10 border border-warn/20 text-warn rounded-lg px-4 py-3 text-sm mb-6">
     No triage recorded yet for this visit.
+</div>
+{% endif %}
+
+{% if lab_requests %}
+<div class="bg-white border border-ink/10 rounded-lg px-4 py-3 text-sm mb-6">
+    <div class="font-semibold text-ink mb-2">Lab Results</div>
+    {% for req in lab_requests %}
+    <div class="{% if not loop.last %}border-b border-ink/10 pb-3 mb-3{% endif %}">
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-muted">Requested {{ req.date_time_requested.strftime("%d %b %Y %H:%M") }}</span>
+            {% if req.is_done %}
+            <span class="text-xs bg-success/10 text-success px-2 py-0.5 rounded-full">Done</span>
+            {% else %}
+            <span class="text-xs bg-warn/10 text-warn px-2 py-0.5 rounded-full">Pending</span>
+            {% endif %}
+        </div>
+        {% for item in req.items %}
+        <div class="grid grid-cols-3 gap-2 py-1">
+            <span class="font-medium">{{ item.test_name }}</span>
+            <span class="col-span-2 text-ink">{{ item.conclusion or "—" }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if lab_requests %}
+<div class="bg-white border border-ink/10 rounded-lg px-4 py-3 text-sm mb-6">
+    <div class="font-semibold text-ink mb-2">Lab Results</div>
+    {% for lr in lab_requests %}
+    <div class="mb-3 last:mb-0 {% if not loop.last %}pb-3 border-b border-ink/5{% endif %}">
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-muted">Requested {{ lr.date_time_requested.strftime("%d %b %Y %H:%M") }}</span>
+            {% if lr.is_done %}
+            <span class="text-xs bg-success/10 text-success px-2 py-1 rounded-full">Done</span>
+            {% else %}
+            <span class="text-xs bg-warn/10 text-warn px-2 py-1 rounded-full">Pending</span>
+            {% endif %}
+        </div>
+        {% for item in lr.items %}
+        <div class="flex justify-between gap-4">
+            <span class="text-ink">{{ item.test_name }}</span>
+            <span class="text-muted text-right">{{ item.conclusion or "—" }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="zh-action-links mb-6">
+    <a href="{{ url_for('lab.new_request', visit_id=visit.visit_id) }}"
+       class="text-sm bg-white border border-ink/10 hover:bg-canvas text-ink px-4 py-2 rounded-lg font-medium">
+        Send to Lab
+    </a>
+    <a href="{{ url_for('pharmacy.new_prescription', visit_id=visit.visit_id) }}"
+       class="text-sm bg-white border border-ink/10 hover:bg-canvas text-ink px-4 py-2 rounded-lg font-medium">
+        Prescribe
+    </a>
+    <a href="{{ url_for('admissions.new_admission', visit_id=visit.visit_id) }}"
+       class="text-sm bg-white border border-ink/10 hover:bg-canvas text-ink px-4 py-2 rounded-lg font-medium">
+        Admit
+    </a>
+</div>
+
+{% if lab_requests %}
+<div class="bg-white border border-ink/10 rounded-lg px-4 py-3 text-sm mb-6">
+    <div class="font-semibold text-ink mb-2">Lab Results</div>
+    {% for lr in lab_requests %}
+    <div class="mb-2 last:mb-0 {% if not loop.last %}pb-2 border-b border-ink/5{% endif %}">
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-muted">Requested {{ lr.date_time_requested.strftime("%d %b %Y %H:%M") }}</span>
+            {% if lr.is_done %}
+            <span class="text-xs bg-success/10 text-success px-2 py-0.5 rounded-full">Done</span>
+            {% else %}
+            <span class="text-xs bg-warn/10 text-warn px-2 py-0.5 rounded-full">Pending</span>
+            {% endif %}
+        </div>
+        {% for item in lr.items %}
+        <div class="text-ink">
+            <span class="font-medium">{{ item.test_name }}:</span>
+            {% if item.conclusion %}{{ item.conclusion }}{% else %}<span class="text-muted italic">awaiting result</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
 </div>
 {% endif %}
 
@@ -53,8 +152,31 @@
     </div>
 </form>
 
-<p class="text-xs text-muted/60 mt-4">
+<p class="text-xs text-muted/60 mt-4 mb-6">
     Saving this also closes out the patient's current queue call-in, if they were called into a room.
 </p>
+
+<div class="bg-white rounded-xl border border-ink/10 p-6 max-w-2xl">
+    <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Send Patient To</h2>
+    <div class="flex flex-wrap gap-3">
+        <a href="{{ url_for('lab.new_request', visit_id=visit.visit_id, next=request.path) }}"
+           class="inline-flex items-center gap-2 border border-ink/15 rounded-lg px-4 py-2 text-sm font-medium text-ink hover:bg-canvas transition">
+            Order Lab Tests
+        </a>
+        <a href="{{ url_for('pharmacy.new_prescription', visit_id=visit.visit_id, next=request.path) }}"
+           class="inline-flex items-center gap-2 border border-ink/15 rounded-lg px-4 py-2 text-sm font-medium text-ink hover:bg-canvas transition">
+            Prescribe Medication
+        </a>
+        {% if not visit.is_admitted %}
+        <a href="{{ url_for('admissions.new_admission', visit_id=visit.visit_id, next=request.path) }}"
+           class="inline-flex items-center gap-2 border border-ink/15 rounded-lg px-4 py-2 text-sm font-medium text-ink hover:bg-canvas transition">
+            Admit Patient
+        </a>
+        {% endif %}
+    </div>
+    <p class="text-xs text-muted/60 mt-3">
+        Each of these returns you here once saved, so you can keep consulting without losing your place.
+    </p>
+</div>
 
 {% endblock %}

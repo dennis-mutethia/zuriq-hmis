@@ -20,8 +20,8 @@ def _dec(val):
 @login_required
 def list_triage():
     records = NurseTriage.query.order_by(NurseTriage.created_at.desc()).limit(200).all()
-    called_in = QueueEntry.active_in_service()
-    return render_template("nursing/list.html", records=records, called_in=called_in)
+    queue_entries = QueueEntry.for_room_function("triage")
+    return render_template("nursing/list.html", records=records, queue_entries=queue_entries)
 
 
 @nursing_bp.route("/visit/<int:visit_id>/triage", methods=["GET", "POST"])

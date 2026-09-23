@@ -46,4 +46,16 @@
     {% endif %}
 </form>
 
+{% if lab_request.is_done and lab_request.visit_id %}
+<div class="no-print mt-6">
+    <a href="{{ url_for('queue.join', visit_id=lab_request.visit_id) }}"
+       class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition inline-block">
+        Queue Patient Back
+    </a>
+    <p class="text-xs text-muted/60 mt-2">
+        Results are ready — send the patient back into the queue (e.g. to Consultation) so the doctor sees them waiting.
+    </p>
+</div>
+{% endif %}
+
 {% endblock %}

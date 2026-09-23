@@ -10,6 +10,51 @@
     </a>
 </div>
 
+{% if queue_entries %}
+<h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Lab Queue</h2>
+<div class="bg-white rounded-xl border border-ink/10 overflow-x-auto mb-8">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Patient</th>
+                <th class="px-4 py-3">OP No.</th>
+                <th class="px-4 py-3">Room</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for entry in queue_entries %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ entry.visit.patient.full_name }}</td>
+                <td class="px-4 py-3 font-mono text-muted">{{ entry.visit.patient.out_patient_no or "—" }}</td>
+                <td class="px-4 py-3">{{ entry.to_room.name }}</td>
+                <td class="px-4 py-3">
+                    {% if entry.status == 'waiting' %}
+                    <span class="text-xs bg-warn/10 text-warn px-2 py-1 rounded-full">Waiting {{ entry.waiting_minutes }}m</span>
+                    {% else %}
+                    <span class="text-xs bg-brand-50 text-brand-700 px-2 py-1 rounded-full">In Service {{ entry.service_minutes }}m</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right">
+                    {% if entry.status == 'waiting' %}
+                    <form method="post" action="{{ url_for('queue.call', queue_entry_id=entry.queue_entry_id) }}" class="inline">
+                        <input type="hidden" name="next" value="{{ url_for('lab.list_requests') }}">
+                        <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium px-3 py-1.5 rounded-md">Call In</button>
+                    </form>
+                    {% elif pending_by_visit.get(entry.visit_id) %}
+                    <a href="{{ url_for('lab.view_request', lab_request_id=pending_by_visit[entry.visit_id].lab_request_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Enter Results</a>
+                    {% else %}
+                    <a href="{{ url_for('lab.new_request', visit_id=entry.visit_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Request Tests</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
 <div class="flex gap-2 mb-6">
     <a href="{{ url_for('lab.list_requests', status='pending') }}"
        class="px-3 py-1.5 rounded-lg text-sm font-medium {{ 'bg-brand-50 text-brand-700' if status == 'pending' else 'text-muted hover:bg-canvas' }}">

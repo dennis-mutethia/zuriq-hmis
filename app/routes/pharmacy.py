@@ -61,7 +61,8 @@ def new_prescription(visit_id):
 
         db.session.commit()
         flash(f"Prescription created for {patient.full_name}.", "success")
-        return redirect(url_for("pharmacy.list_prescriptions"))
+        next_url = request.args.get("next")
+        return redirect(next_url or url_for("pharmacy.list_prescriptions"))
 
     return render_template(
         "pharmacy/new.html",

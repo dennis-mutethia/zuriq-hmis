@@ -2,7 +2,7 @@ from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app import db
-from app.models import Visit, Patient, Clinic, Consultant, QueueEntry
+from app.models import Visit, Patient, Clinic, Consultant, QueueEntry, LabRequest
 
 visits_bp = Blueprint("visits", __name__, url_prefix="/visits")
 
@@ -87,8 +87,8 @@ def list_consultations():
     elif status == "seen":
         query = query.filter(Visit.diagnosis.isnot(None))
     visits = query.order_by(Visit.visit_datetime.desc()).limit(200).all()
-    called_in = QueueEntry.active_in_service()
-    return render_template("visits/consultations.html", visits=visits, called_in=called_in, status=status)
+    queue_entries = QueueEntry.for_room_function("consultation")
+    return render_template("visits/consultations.html", visits=visits, queue_entries=queue_entries, status=status)
 
 
 @visits_bp.route("/<int:visit_id>/consult", methods=["GET", "POST"])
@@ -108,7 +108,16 @@ def consult(visit_id):
         return redirect(url_for("visits.list_consultations"))
 
     latest_triage = visit.triage_records[-1] if visit.triage_records else None
-    return render_template("visits/consultation.html", visit=visit, patient=patient, latest_triage=latest_triage)
+    lab_requests = (
+        LabRequest.query
+        .filter_by(visit_id=visit.visit_id)
+        .order_by(LabRequest.date_time_requested.desc())
+        .all()
+    )
+    return render_template(
+        "visits/consultation.html",
+        visit=visit, patient=patient, latest_triage=latest_triage, lab_requests=lab_requests,
+    )
 
 
 @visits_bp.route("/find-patient")

@@ -56,7 +56,8 @@ def new_admission(visit_id):
         # in_patient_no is assigned by a DB trigger right after insert;
         # commit() expires the object so the next access re-fetches it.
         flash(f"{patient.full_name} admitted — IP number {patient.in_patient_no}.", "success")
-        return redirect(url_for("admissions.list_admissions"))
+        next_url = request.args.get("next")
+        return redirect(next_url or url_for("admissions.list_admissions"))
 
     return render_template(
         "admissions/new.html",

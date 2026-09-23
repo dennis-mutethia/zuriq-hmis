@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Blacklisted Patients — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Patients{% endblock %}
+{% block content %}
+
+<div class="zh-action-row mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Blacklisted Patients</h1>
+    <a href="{{ url_for('patients.list_patients') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">Back to Patients</a>
+</div>
+
+<div class="zh-table-wrap bg-white rounded-xl shadow-sm border border-ink/10">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Patient</th>
+                <th class="px-4 py-3">OP No.</th>
+                <th class="px-4 py-3">Reason</th>
+                <th class="px-4 py-3">Blacklisted On</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for p in patients %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ p.full_name }}</td>
+                <td class="px-4 py-3 font-mono text-muted">{{ p.out_patient_no or "—" }}</td>
+                <td class="px-4 py-3">{{ p.latest_blacklist_entry.reason or "—" }}</td>
+                <td class="px-4 py-3 text-muted">{{ p.latest_blacklist_entry.date_time_recorded.strftime("%d %b %Y") }}</td>
+                <td class="px-4 py-3 text-right">
+                    <form method="post" action="{{ url_for('patients.unblacklist_patient', patient_id=p.patient_id) }}"
+                          onsubmit="return confirm('Clear {{ p.full_name }} from the blacklist?');">
+                        <button type="submit" class="text-brand-600 hover:text-brand-700 font-medium">Clear</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-muted/60">No patients currently blacklisted.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

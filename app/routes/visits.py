@@ -2,7 +2,7 @@ from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from app import db
-from app.models import Visit, Patient, Clinic, Consultant
+from app.models import Visit, Patient, Clinic, Consultant, QueueEntry
 
 visits_bp = Blueprint("visits", __name__, url_prefix="/visits")
 
@@ -75,6 +75,40 @@ def new_visit():
         clinics=Clinic.query.order_by(Clinic.name).all(),
         consultants=Consultant.query.filter_by(is_active=True).order_by(Consultant.surname).all(),
     )
+
+
+@visits_bp.route("/consultations")
+@login_required
+def list_consultations():
+    status = request.args.get("status", "pending")
+    query = Visit.query.join(Patient)
+    if status == "pending":
+        query = query.filter(Visit.diagnosis.is_(None))
+    elif status == "seen":
+        query = query.filter(Visit.diagnosis.isnot(None))
+    visits = query.order_by(Visit.visit_datetime.desc()).limit(200).all()
+    called_in = QueueEntry.active_in_service()
+    return render_template("visits/consultations.html", visits=visits, called_in=called_in, status=status)
+
+
+@visits_bp.route("/<int:visit_id>/consult", methods=["GET", "POST"])
+@login_required
+def consult(visit_id):
+    visit = Visit.query.get_or_404(visit_id)
+    patient = visit.patient
+
+    if request.method == "POST":
+        visit.doctor = request.form.get("doctor") or visit.doctor
+        visit.hpi = request.form.get("hpi") or None
+        visit.diagnosis = request.form.get("diagnosis") or None
+        visit.summary = request.form.get("summary") or None
+        QueueEntry.complete_for_visit(visit.visit_id)
+        db.session.commit()
+        flash(f"Consultation recorded for {patient.full_name}.", "success")
+        return redirect(url_for("visits.list_consultations"))
+
+    latest_triage = visit.triage_records[-1] if visit.triage_records else None
+    return render_template("visits/consultation.html", visit=visit, patient=patient, latest_triage=latest_triage)
 
 
 @visits_bp.route("/find-patient")

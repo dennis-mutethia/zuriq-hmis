@@ -2,7 +2,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app import db
-from app.models import NurseTriage, ObservationChart, Visit, Admission
+from app.models import NurseTriage, ObservationChart, Visit, Admission, QueueEntry
 
 nursing_bp = Blueprint("nursing", __name__, url_prefix="/nursing")
 
@@ -20,7 +20,8 @@ def _dec(val):
 @login_required
 def list_triage():
     records = NurseTriage.query.order_by(NurseTriage.created_at.desc()).limit(200).all()
-    return render_template("nursing/list.html", records=records)
+    called_in = QueueEntry.active_in_service()
+    return render_template("nursing/list.html", records=records, called_in=called_in)
 
 
 @nursing_bp.route("/visit/<int:visit_id>/triage", methods=["GET", "POST"])
@@ -46,9 +47,10 @@ def new_triage(visit_id):
             recorded_by=current_user.system_user_id,
         )
         db.session.add(triage)
+        QueueEntry.complete_for_visit(visit.visit_id)
         db.session.commit()
         flash(f"Triage recorded for {patient.full_name}.", "success")
-        return redirect(url_for("visits.list_visits"))
+        return redirect(url_for("nursing.list_triage"))
 
     return render_template("nursing/triage_form.html", visit=visit, patient=patient)
 

@@ -120,6 +120,34 @@ class Patient(db.Model):
         parts = [self.surname, self.other_names, self.third_name]
         return " ".join(p for p in parts if p)
 
+    @property
+    def latest_blacklist_entry(self):
+        return (
+            PatientBlacklistEntry.query
+            .filter_by(patient_id=self.patient_id)
+            .order_by(PatientBlacklistEntry.date_time_recorded.desc())
+            .first()
+        )
+
+    @property
+    def is_blacklisted(self):
+        entry = self.latest_blacklist_entry
+        return bool(entry and entry.is_blacklisted)
+
+
+class PatientBlacklistEntry(db.Model):
+    __tablename__ = "patient_blacklist_entries"
+
+    blacklist_entry_id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey("patients.patient_id"), nullable=False)
+    is_blacklisted = db.Column(db.Boolean, nullable=False)
+    reason = db.Column(db.Text)
+    recorded_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
+    date_time_recorded = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    patient = db.relationship("Patient")
+    recorded_by_user = db.relationship("SystemUser")
+
 
 class Consultant(db.Model):
     __tablename__ = "consultants"
@@ -175,6 +203,7 @@ class Visit(db.Model):
     doctor = db.Column(db.Text)
     nurse = db.Column(db.Text)
     hpi = db.Column(db.Text)
+    diagnosis = db.Column(db.Text)
     summary = db.Column(db.Text)
     is_processed = db.Column(db.Boolean, nullable=False, default=False)
     is_admitted = db.Column(db.Boolean, nullable=False, default=False)
@@ -629,6 +658,37 @@ class QueueEntry(db.Model):
             return None
         end = self.completed_at or datetime.now(timezone.utc)
         return int((end - self.called_at).total_seconds() // 60)
+
+    @staticmethod
+    def active_in_service():
+        """Every patient currently called into a room and not yet marked
+        done, across all rooms — used to show "who's waiting for me" on
+        Nursing and Consultation screens without hardcoding room names
+        (rooms are admin-configurable, so a fixed 'Triage'/'Consultation'
+        name would be fragile)."""
+        return (
+            QueueEntry.query
+            .filter(QueueEntry.called_at.isnot(None), QueueEntry.completed_at.is_(None))
+            .order_by(QueueEntry.called_at)
+            .all()
+        )
+
+    @staticmethod
+    def complete_for_visit(visit_id):
+        """Closes the most recent in-service queue entry for this visit,
+        if any — called when the clinical action a queue call-in was for
+        (triage, consultation) is actually completed, so the queue closes
+        the loop automatically instead of staying open forever."""
+        entry = (
+            QueueEntry.query
+            .filter_by(visit_id=visit_id)
+            .filter(QueueEntry.called_at.isnot(None), QueueEntry.completed_at.is_(None))
+            .order_by(QueueEntry.called_at.desc())
+            .first()
+        )
+        if entry:
+            entry.completed_at = datetime.now(timezone.utc)
+        return entry
 
 
 class NurseTriage(db.Model):

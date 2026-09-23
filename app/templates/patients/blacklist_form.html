@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Blacklist Patient — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Patients{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold text-ink mb-1">Blacklist Patient</h1>
+<p class="text-muted mb-6">{{ patient.full_name }} — OP: <span class="font-mono">{{ patient.out_patient_no or "—" }}</span></p>
+
+<div class="bg-danger/10 border border-danger/20 text-danger rounded-lg px-4 py-3 text-sm mb-6">
+    Blacklisting a patient doesn't block them from being registered or billed —
+    it's a visible flag for front-desk and billing staff (e.g. "require payment upfront").
+</div>
+
+<form method="post" class="bg-white rounded-xl shadow-sm border border-ink/10 p-6 max-w-lg space-y-4">
+    <div>
+        <label class="block text-sm text-muted mb-1">Reason *</label>
+        <textarea name="reason" rows="3" required placeholder="e.g. Unpaid balance of KES 12,000 from admission on..."
+                  class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm"></textarea>
+    </div>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="bg-danger hover:bg-danger/90 text-white font-medium px-5 py-2 rounded-lg shadow-sm transition">
+            Blacklist Patient
+        </button>
+        <a href="{{ url_for('patients.list_patients') }}" class="text-muted hover:text-ink text-sm">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

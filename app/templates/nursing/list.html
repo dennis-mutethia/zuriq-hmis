@@ -3,8 +3,39 @@
 {% block breadcrumb %}Nursing{% endblock %}
 {% block content %}
 
-<h1 class="text-2xl font-semibold text-ink mb-6">Nurse Triage Records</h1>
+<h1 class="text-2xl font-semibold text-ink mb-6">Nurse Triage</h1>
 
+{% if called_in %}
+<h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Called In — Waiting for Triage</h2>
+<div class="bg-white rounded-xl border border-ink/10 overflow-x-auto mb-8">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-canvas text-muted uppercase text-xs">
+            <tr>
+                <th class="px-4 py-3">Patient</th>
+                <th class="px-4 py-3">OP No.</th>
+                <th class="px-4 py-3">Room</th>
+                <th class="px-4 py-3">In Service</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for entry in called_in %}
+            <tr class="hover:bg-canvas/60">
+                <td class="px-4 py-3 font-medium">{{ entry.visit.patient.full_name }}</td>
+                <td class="px-4 py-3 font-mono text-muted">{{ entry.visit.patient.out_patient_no or "—" }}</td>
+                <td class="px-4 py-3">{{ entry.to_room.name }}</td>
+                <td class="px-4 py-3 text-muted">{{ entry.service_minutes }}m</td>
+                <td class="px-4 py-3 text-right">
+                    <a href="{{ url_for('nursing.new_triage', visit_id=entry.visit_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Record Triage</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Recent Triage Records</h2>
 <div class="bg-white rounded-xl border border-ink/10 overflow-x-auto">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">

@@ -30,6 +30,8 @@ before it.
 | 17 | `migration_add_procurement.sql` | #10, #11 (Suppliers, Pharmacy) | `purchase_orders`, `purchase_order_items`, `grns`, `grn_items` |
 | 18 | `migration_add_banking.sql` | #14 (General Ledger) | `banks`, `bank_branches`, `bank_deposits`, `bank_reconciliations`, `bank_rec_items` |
 | 19 | `migration_add_consultants.sql` | #2 (Visits) | `consultants`, `consultant_bookings`, adds `visits.consultant_id` |
+| 20 | `migration_add_blacklist.sql` | `patients` table already exists | `patient_blacklist_entries` |
+| 21 | `migration_add_diagnosis.sql` | `visits` table already exists | Adds `visits.diagnosis` |
 
 **Skip `migration_add_roles.sql` entirely** if you haven't already run it —
 `migration_roles_table.sql` (step 9) supersedes it and does the equivalent

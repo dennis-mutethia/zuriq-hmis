@@ -49,6 +49,8 @@
                        class="text-ink/70 hover:text-ink font-medium mr-3">Queue</a>
                     <a href="{{ url_for('nursing.new_triage', visit_id=v.visit_id) }}"
                        class="text-ink/70 hover:text-ink font-medium mr-3">Triage</a>
+                    <a href="{{ url_for('visits.consult', visit_id=v.visit_id) }}"
+                       class="text-ink/70 hover:text-ink font-medium mr-3">{{ "View" if v.diagnosis else "Consult" }}</a>
                     {% if v.is_processed %}
                     <span class="text-muted/60 text-xs">Billed</span>
                     {% else %}

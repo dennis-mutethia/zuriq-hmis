@@ -159,6 +159,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- ── Module: Patient Blacklist ────────────────────────────────────────────
+-- Source: tblblacklistpatients. The original is an append-only log, not a
+-- single status flag — each row is either a blacklisting event
+-- (IsBlackListed = 1) or a clearing event, and a patient's *current*
+-- status is derived from their most recent entry. Kept that shape rather
+-- than collapsing it to a single boolean on `patients`, since the history
+-- of why/when someone was blacklisted (and later cleared) is the point.
+
+CREATE TABLE patient_blacklist_entries (
+    blacklist_entry_id  SERIAL PRIMARY KEY,
+    patient_id             INTEGER NOT NULL REFERENCES patients(patient_id),
+    is_blacklisted           BOOLEAN NOT NULL,
+    reason                     TEXT,
+    recorded_by                 INTEGER REFERENCES system_users(system_user_id),
+    date_time_recorded             TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_patient_blacklist_entries_patient_id ON patient_blacklist_entries (patient_id, date_time_recorded DESC);
+
 -- ── Module: OPD Visits ───────────────────────────────────────────────────
 -- Source: tblclinics, tblmedicalinfos (via BaseClasses/_MedicalInfo.cs)
 
@@ -178,7 +197,8 @@ CREATE TABLE visits (
     doctor            TEXT,             -- free text in the original app, not a FK
     nurse             TEXT,             -- free text in the original app, not a FK
     hpi               TEXT,             -- "History of Presenting Illness"
-    summary           TEXT,
+    diagnosis         TEXT,
+    summary           TEXT,             -- doctor's notes / treatment plan
     is_processed      BOOLEAN NOT NULL DEFAULT FALSE,  -- true once billed
     is_admitted       BOOLEAN NOT NULL DEFAULT FALSE,
     is_consultant     BOOLEAN NOT NULL DEFAULT FALSE,  -- specialist consult vs regular OPD

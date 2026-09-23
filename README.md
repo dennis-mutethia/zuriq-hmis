@@ -263,6 +263,85 @@ worth revisiting if the bills/visits tables get very large later.
 - **Per-clinic/per-doctor breakdowns** — everything here is facility-wide;
   no filtering by clinic, consultant, or payment method yet.
 
+## Doctor Consultation + Queue Integration
+
+Two real workflow gaps, closed together since they're related:
+
+**1. There was no consultation step.** `visits.doctor`/`hpi`/`summary` have
+existed since Visits was first built, but the only place they were ever
+set was at registration — before anyone had actually seen the patient.
+There was no screen for a doctor to record findings after triage.
+
+- **`/visits/consultations`** — the doctor's worklist: visits not yet
+  diagnosed, filterable to Seen/Not Yet Seen/All
+- **`/visits/<id>/consult`** — records Doctor, HPI, **Diagnosis** (new
+  field — didn't exist before), and Treatment Plan/Notes. Shows the
+  patient's latest triage vitals inline for context, so the doctor isn't
+  hunting for them in another tab.
+- "Consult" added to the Visits list actions alongside Triage/Bill/Admit/
+  Prescribe/Lab
+
+**2. Queue call-ins didn't surface anywhere.** Calling a patient into a
+room just changed their status on the Queue board — Nursing and (now)
+Consultation had no idea anyone was waiting for them; staff had to
+separately search Visits.
+
+- Both **Nursing** (`/nursing`) and **Consultation** (`/visits/consultations`)
+  now show a **"Called In — Waiting"** panel at the top: every patient
+  currently in-service in *any* room, with a direct action link. This
+  deliberately doesn't hardcode room names ("Triage", "Consultation") —
+  rooms are admin-configurable, so a fixed name would break if you rename
+  or add rooms; instead it shows everyone in-service everywhere, labeled
+  with their actual room.
+- **Saving a triage record or a consultation automatically closes that
+  patient's queue call-in** (`QueueEntry.complete_for_visit`) — completing
+  the clinical action is what closes the loop, not a separate manual
+  "mark done" click on the Queue board.
+
+Run `migrations/migration_add_diagnosis.sql` on an existing database (just
+adds `visits.diagnosis` — no new tables), or `schema.sql` for fresh installs.
+
+### What's intentionally deferred (Consultation)
+
+- **Structured diagnosis codes (ICD-10 etc.)** — diagnosis is free text,
+  same treatment as HPI/summary elsewhere in this app.
+- **Multiple consultations per visit** — one visit has one set of
+  doctor/hpi/diagnosis/summary fields, matching the original's
+  `tblmedicalinfos` shape. A patient seen by two different doctors in one
+  visit (e.g. referred mid-visit) would overwrite, not layer.
+
+## Patient Blacklist
+
+Source: `tblblacklistpatients`. Kept as an **append-only history log**
+rather than collapsing it to a single boolean on `patients` — the
+original's own design does this (each row is a blacklist-or-clear event),
+and the history of *why* and *when* someone was blacklisted, and later
+cleared, is genuinely useful — a single flag would lose that.
+
+- **`/patients/blacklist`** — everyone currently blacklisted, with reason
+  and date; "Clear" removes the flag (by adding a clearing entry, not
+  deleting history)
+- **Blacklisting** requires a reason (enforced server-side) and shows a
+  clear note that this doesn't block registration or billing — it's a
+  visible flag for staff judgment ("require payment upfront"), not an
+  access restriction
+- A patient's current status is always their **most recent** entry —
+  `Patient.is_blacklisted` and `Patient.latest_blacklist_entry` compute
+  this rather than storing it redundantly
+- The main Patients list shows a "Blacklisted" badge next to the name and
+  a Blacklist/Clear action per row
+
+Run `migrations/migration_add_blacklist.sql` on an existing database, or
+`schema.sql` for fresh installs.
+
+### What's intentionally deferred (Blacklist)
+
+- **Enforcement** — nothing currently stops billing, admitting, or
+  dispensing to a blacklisted patient; it's informational only, matching
+  what the note on the blacklist form says.
+- **Automatic triggers** — e.g. auto-blacklisting on an unpaid balance
+  past some threshold. Every blacklist action here is manual.
+
 ## Consultants
 
 Source: `tblconsultants`, `tblconsultantsbookings`. `visits.is_consultant`

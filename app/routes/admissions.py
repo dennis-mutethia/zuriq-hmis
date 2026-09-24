@@ -90,6 +90,14 @@ def discharge(admission_id):
         admission.discharge_medication = request.form.get("discharge_medication") or None
         admission.discharged_by = current_user.system_user_id
 
+        # HPI and Treatment were captured earlier (at Consultation) and
+        # live on the visit, not the admission — shown here editable so
+        # the discharging doctor can update or leave them as originally
+        # recorded, rather than being locked out of correcting them.
+        if admission.visit:
+            admission.visit.hpi = request.form.get("hpi") or None
+            admission.visit.summary = request.form.get("summary") or None
+
         current = admission.current_bed_assignment
         if current:
             current.is_current_bed = False

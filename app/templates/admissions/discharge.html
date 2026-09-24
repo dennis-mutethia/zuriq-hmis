@@ -31,6 +31,16 @@
         <input name="discharging_doctor" value="{{ admission.discharging_doctor or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
     </div>
     <div>
+        <label class="block text-sm text-muted mb-1">History of Presenting Illness (HPI)</label>
+        <textarea name="hpi" rows="3" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ (admission.visit.hpi if admission.visit else '') or '' }}</textarea>
+        <p class="text-xs text-muted/60 mt-1">Captured at consultation — update if needed, or leave as-is.</p>
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Treatment</label>
+        <textarea name="summary" rows="4" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ (admission.visit.summary if admission.visit else '') or '' }}</textarea>
+        <p class="text-xs text-muted/60 mt-1">Captured at consultation — update if needed, or leave as-is.</p>
+    </div>
+    <div>
         <label class="block text-sm text-muted mb-1">Discharge Diagnosis</label>
         <textarea name="discharge_diagnosis" rows="2" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ admission.discharge_diagnosis or '' }}</textarea>
     </div>

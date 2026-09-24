@@ -196,7 +196,10 @@ CREATE TABLE visits (
     age_weeks         INTEGER,
     doctor            TEXT,             -- free text in the original app, not a FK
     nurse             TEXT,             -- free text in the original app, not a FK
+    chief_complaint   TEXT,
     hpi               TEXT,             -- "History of Presenting Illness"
+    past_medical_history TEXT,
+    examination       TEXT,             -- general/physical exam findings
     diagnosis         TEXT,
     summary           TEXT,             -- doctor's notes / treatment plan
     is_processed      BOOLEAN NOT NULL DEFAULT FALSE,  -- true once billed

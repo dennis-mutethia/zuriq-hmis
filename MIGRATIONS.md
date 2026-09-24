@@ -33,6 +33,7 @@ before it.
 | 20 | `migration_add_blacklist.sql` | `patients` table already exists | `patient_blacklist_entries` |
 | 21 | `migration_add_diagnosis.sql` | `visits` table already exists | Adds `visits.diagnosis` |
 | 22 | `migration_add_room_functions.sql` | `rooms` table already exists | Adds `rooms.function` (auto-tags rooms with default names) |
+| 23 | `migration_add_consultation_fields.sql` | `visits` table already exists | Adds `visits.chief_complaint`, `visits.past_medical_history`, `visits.examination` |
 
 **Skip `migration_add_roles.sql` entirely** if you haven't already run it —
 `migration_roles_table.sql` (step 9) supersedes it and does the equivalent

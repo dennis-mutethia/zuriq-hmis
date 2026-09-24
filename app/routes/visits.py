@@ -1,6 +1,6 @@
 from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from app.models import Visit, Patient, Clinic, Consultant, QueueEntry, LabRequest
 
@@ -99,13 +99,22 @@ def consult(visit_id):
 
     if request.method == "POST":
         visit.doctor = request.form.get("doctor") or visit.doctor
+        visit.chief_complaint = request.form.get("chief_complaint") or None
         visit.hpi = request.form.get("hpi") or None
+        visit.past_medical_history = request.form.get("past_medical_history") or None
+        visit.examination = request.form.get("examination") or None
         visit.diagnosis = request.form.get("diagnosis") or None
         visit.summary = request.form.get("summary") or None
         QueueEntry.complete_for_visit(visit.visit_id)
         db.session.commit()
         flash(f"Consultation recorded for {patient.full_name}.", "success")
         return redirect(url_for("visits.list_consultations"))
+
+    # Doctor auto-picks the logged-in user on first open, but never
+    # overwrites a value someone already recorded (e.g. a different
+    # doctor who started this consultation earlier).
+    if not visit.doctor:
+        visit.doctor = current_user.username
 
     latest_triage = visit.triage_records[-1] if visit.triage_records else None
     lab_requests = (

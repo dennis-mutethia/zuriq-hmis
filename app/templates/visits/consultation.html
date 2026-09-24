@@ -3,19 +3,7 @@
 {% block breadcrumb %}Consultation{% endblock %}
 {% block content %}
 
-<div class="zh-action-row mb-1">
-    <h1 class="text-2xl font-semibold text-ink">Consultation</h1>
-    <div class="zh-action-links">
-        <a href="{{ url_for('lab.new_request', visit_id=visit.visit_id) }}"
-           class="text-sm bg-canvas hover:bg-ink/10 text-ink px-3 py-2 rounded-lg font-medium">Send to Lab</a>
-        <a href="{{ url_for('pharmacy.new_prescription', visit_id=visit.visit_id) }}"
-           class="text-sm bg-canvas hover:bg-ink/10 text-ink px-3 py-2 rounded-lg font-medium">Prescribe</a>
-        {% if not visit.is_admitted %}
-        <a href="{{ url_for('admissions.new_admission', visit_id=visit.visit_id) }}"
-           class="text-sm bg-canvas hover:bg-ink/10 text-ink px-3 py-2 rounded-lg font-medium">Admit</a>
-        {% endif %}
-    </div>
-</div>
+<h1 class="text-2xl font-semibold text-ink mb-1">Consultation</h1>
 <p class="text-muted mb-6">
     {{ patient.full_name }} — OP: <span class="font-mono">{{ patient.out_patient_no }}</span> ·
     Visit: {{ visit.visit_datetime.strftime("%d %b %Y %H:%M") }}
@@ -69,8 +57,20 @@
         <input name="doctor" value="{{ visit.doctor or '' }}" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">
     </div>
     <div>
+        <label class="block text-sm text-muted mb-1">Chief Complaint</label>
+        <textarea name="chief_complaint" rows="2" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ visit.chief_complaint or '' }}</textarea>
+    </div>
+    <div>
         <label class="block text-sm text-muted mb-1">History of Presenting Illness (HPI)</label>
         <textarea name="hpi" rows="3" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ visit.hpi or '' }}</textarea>
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Past Medical History</label>
+        <textarea name="past_medical_history" rows="2" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ visit.past_medical_history or '' }}</textarea>
+    </div>
+    <div>
+        <label class="block text-sm text-muted mb-1">Examination (General / Physical)</label>
+        <textarea name="examination" rows="3" class="w-full border border-ink/15 rounded-lg px-3 py-2 text-sm">{{ visit.examination or '' }}</textarea>
     </div>
     <div>
         <label class="block text-sm text-muted mb-1">Diagnosis</label>
@@ -98,7 +98,7 @@
     <div class="flex flex-wrap gap-3">
         <a href="{{ url_for('lab.new_request', visit_id=visit.visit_id, next=request.path) }}"
            class="inline-flex items-center gap-2 border border-ink/15 rounded-lg px-4 py-2 text-sm font-medium text-ink hover:bg-canvas transition">
-            Order Lab Tests
+            Order Lab / Imaging Tests
         </a>
         <a href="{{ url_for('pharmacy.new_prescription', visit_id=visit.visit_id, next=request.path) }}"
            class="inline-flex items-center gap-2 border border-ink/15 rounded-lg px-4 py-2 text-sm font-medium text-ink hover:bg-canvas transition">

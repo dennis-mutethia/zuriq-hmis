@@ -10,7 +10,11 @@ consultants_bp = Blueprint("consultants", __name__, url_prefix="/consultants")
 @login_required
 def list_consultants():
     consultants = Consultant.query.filter_by(is_active=True).order_by(Consultant.surname).all()
-    return render_template("consultants/list.html", consultants=consultants)
+    patient = None
+    patient_id = request.args.get("patient_id")
+    if patient_id:
+        patient = Patient.query.get(patient_id)
+    return render_template("consultants/list.html", consultants=consultants, patient=patient)
 
 
 @consultants_bp.route("/new", methods=["GET", "POST"])
@@ -79,6 +83,13 @@ def new_booking(consultant_id):
         flash(f"Booked {patient.full_name} with {consultant.display_name}.", "success")
         return redirect(url_for("consultants.view_bookings", consultant_id=consultant.consultant_id))
 
+    # If a patient_id was passed in (e.g. from Admissions' "See Specialist"
+    # link), skip the search step and go straight to confirming the booking.
+    preselected_patient = None
+    preselected_id = request.values.get("patient_id")
+    if preselected_id:
+        preselected_patient = Patient.query.get(preselected_id)
+
     q = request.args.get("q", "").strip()
     patients = []
     if q:
@@ -86,7 +97,10 @@ def new_booking(consultant_id):
         patients = Patient.query.filter(
             db.or_(Patient.surname.ilike(like), Patient.other_names.ilike(like), Patient.out_patient_no.ilike(like))
         ).limit(20).all()
-    return render_template("consultants/book.html", consultant=consultant, patients=patients, q=q)
+    return render_template(
+        "consultants/book.html",
+        consultant=consultant, patients=patients, q=q, preselected_patient=preselected_patient,
+    )
 
 
 @consultants_bp.route("/bookings/<int:consultant_booking_id>/seen", methods=["POST"])

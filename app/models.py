@@ -890,10 +890,17 @@ class Admission(db.Model):
     admitting_doctor = db.Column(db.Text)
     discharging_doctor = db.Column(db.Text)
     received_by_nurse = db.Column(db.Text)
+    admission_diagnosis = db.Column(db.Text)
+    discharge_outcome = db.Column(db.Text)  # 'Alive' | 'Deceased' | 'Referred' | 'Discharged Against Medical Advice'
+    discharge_diagnosis = db.Column(db.Text)
+    discharge_notes = db.Column(db.Text)
+    discharge_medication = db.Column(db.Text)
+    discharged_by = db.Column(db.Integer, db.ForeignKey("system_users.system_user_id"))
 
     patient = db.relationship("Patient")
     visit = db.relationship("Visit")
     bed_assignments = db.relationship("AdmissionWard", backref="admission", order_by="AdmissionWard.assigned_at")
+    discharged_by_user = db.relationship("SystemUser", foreign_keys=[discharged_by])
 
     @property
     def current_bed_assignment(self):

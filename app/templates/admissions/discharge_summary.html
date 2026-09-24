@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Discharge Summary — Zuriq-HMIS{% endblock %}
+{% block breadcrumb %}Admissions{% endblock %}
+{% block content %}
+<div class="zh-print-surface">
+
+<div class="zh-action-row mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Discharge Summary</h1>
+    <button type="button" class="zh-print-btn no-print" onclick="zhPrint('a4')" title="Open browser print dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9V4h12v5M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/><path d="M18 12h.01"/></svg>
+        Print
+    </button>
+</div>
+
+<div class="bg-white rounded-xl border border-ink/10 p-6 max-w-3xl space-y-6">
+
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Patient Information</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+            <div><span class="text-muted">Name:</span> {{ admission.patient.full_name }}</div>
+            <div><span class="text-muted">Sex:</span> {{ admission.patient.sex or "—" }}</div>
+            <div><span class="text-muted">IP No.:</span> <span class="font-mono">{{ admission.patient.in_patient_no or "—" }}</span></div>
+            <div><span class="text-muted">OP No.:</span> <span class="font-mono">{{ admission.patient.out_patient_no or "—" }}</span></div>
+            <div><span class="text-muted">Admitted:</span> {{ admission.admission_datetime.strftime("%d %b %Y %H:%M") }}</div>
+            <div><span class="text-muted">Discharged:</span> {{ admission.discharge_datetime.strftime("%d %b %Y %H:%M") if admission.discharge_datetime else "—" }}</div>
+        </div>
+    </section>
+
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Outcome</h2>
+        <p class="text-sm">
+            <span class="font-medium">{{ admission.discharge_outcome or "—" }}</span>
+            {% if admission.discharging_doctor %} · Discharged by {{ admission.discharging_doctor }}{% endif %}
+        </p>
+    </section>
+
+    {% if admission.admission_diagnosis %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Admission Diagnosis</h2>
+        <p class="text-sm">{{ admission.admission_diagnosis }}</p>
+    </section>
+    {% endif %}
+
+    {% if visit and visit.chief_complaint %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Chief Complaint</h2>
+        <p class="text-sm">{{ visit.chief_complaint }}</p>
+    </section>
+    {% endif %}
+
+    {% if visit and visit.hpi %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">History of Presenting Illness</h2>
+        <p class="text-sm">{{ visit.hpi }}</p>
+    </section>
+    {% endif %}
+
+    {% if visit and visit.examination %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Examination</h2>
+        <p class="text-sm">{{ visit.examination }}</p>
+    </section>
+    {% endif %}
+
+    {% if lab_requests %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Tests Done</h2>
+        <table class="w-full text-sm">
+            <tbody class="divide-y divide-ink/5">
+                {% for lr in lab_requests %}
+                {% for item in lr.items %}
+                <tr>
+                    <td class="py-1 font-medium">{{ item.test_name }}</td>
+                    <td class="py-1 text-right text-muted">{{ item.conclusion or "Pending" }}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
+    {% if visit and visit.summary %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Treatment</h2>
+        <p class="text-sm">{{ visit.summary }}</p>
+    </section>
+    {% endif %}
+
+    {% if prescriptions %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Medication During Admission</h2>
+        <table class="w-full text-sm">
+            <tbody class="divide-y divide-ink/5">
+                {% for p in prescriptions %}
+                {% for item in p.items %}
+                <tr>
+                    <td class="py-1 font-medium">{{ item.inscription }}</td>
+                    <td class="py-1 text-muted">{{ item.frequency_per_day or "" }} {{ item.dosage_duration or "" }}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
+    {% if admission.discharge_diagnosis %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Discharge Diagnosis</h2>
+        <p class="text-sm">{{ admission.discharge_diagnosis }}</p>
+    </section>
+    {% endif %}
+
+    {% if admission.discharge_medication %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Discharge Medication</h2>
+        <p class="text-sm whitespace-pre-line">{{ admission.discharge_medication }}</p>
+    </section>
+    {% endif %}
+
+    {% if admission.discharge_notes %}
+    <section>
+        <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Discharge Notes / Referral / Follow-up</h2>
+        <p class="text-sm whitespace-pre-line">{{ admission.discharge_notes }}</p>
+    </section>
+    {% endif %}
+
+</div>
+
+<div class="no-print mt-6">
+    <a href="{{ url_for('admissions.list_admissions') }}" class="text-muted hover:text-ink text-sm">Back to Admissions</a>
+</div>
+
+</div>
+{% endblock %}

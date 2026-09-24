@@ -49,18 +49,18 @@
                 </td>
                 <td class="px-4 py-3 text-muted">{{ a.admission_datetime.strftime("%d %b %Y %H:%M") }}</td>
                 <td class="px-4 py-3">{{ a.admitting_doctor or "—" }}</td>
-                <td class="px-4 py-3 text-right">
+                <td class="px-4 py-3 text-right space-x-3">
                     <a href="{{ url_for('nursing.observation_chart', admission_id=a.admission_id) }}"
-                       class="text-ink/70 hover:text-ink font-medium mr-3">Vitals</a>
+                       class="text-ink/70 hover:text-ink font-medium">Vitals</a>
                     {% if a.is_in_admission %}
-                    <form method="post" action="{{ url_for('admissions.discharge', admission_id=a.admission_id) }}"
-                          onsubmit="return confirm('Discharge {{ a.patient.full_name }}?');" class="inline-flex items-center gap-2">
-                        <input name="discharging_doctor" placeholder="Discharging doctor"
-                               class="border border-ink/15 rounded-lg px-2 py-1 text-xs w-32">
-                        <button type="submit" class="text-danger hover:text-danger/80 font-medium text-xs">Discharge</button>
-                    </form>
+                    <a href="{{ url_for('queue.join', visit_id=a.visit_id) }}" class="text-ink/70 hover:text-ink font-medium">Send to Theatre</a>
+                    <a href="{{ url_for('consultants.list_consultants', patient_id=a.patient_id) }}" class="text-ink/70 hover:text-ink font-medium">See Specialist</a>
+                    <a href="{{ url_for('admissions.discharge', admission_id=a.admission_id) }}" class="text-danger hover:text-danger/80 font-medium">Discharge</a>
                     {% else %}
-                    <span class="text-xs text-muted">Discharged {{ a.discharge_datetime.strftime("%d %b") if a.discharge_datetime else "" }}</span>
+                    <span class="text-xs text-muted">
+                        {{ a.discharge_outcome or "Discharged" }} {{ a.discharge_datetime.strftime("%d %b") if a.discharge_datetime else "" }}
+                    </span>
+                    <a href="{{ url_for('admissions.discharge_summary', admission_id=a.admission_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Summary</a>
                     {% endif %}
                 </td>
             </tr>

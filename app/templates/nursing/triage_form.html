@@ -63,4 +63,27 @@
     </div>
 </form>
 
+<div class="bg-white rounded-xl border border-ink/10 p-6 max-w-2xl mt-6">
+    <h2 class="text-sm font-semibold text-muted uppercase tracking-wide mb-3">Send Patient To</h2>
+    <div class="flex flex-wrap gap-3">
+        <a href="{{ url_for('lab.new_request', visit_id=visit.visit_id, next=request.path) }}"
+           class="inline-flex items-center gap-2 border border-ink/15 rounded-lg px-4 py-2 text-sm font-medium text-ink hover:bg-canvas transition">
+            Order Lab / Imaging Tests
+        </a>
+        <a href="{{ url_for('pharmacy.new_prescription', visit_id=visit.visit_id, next=request.path) }}"
+           class="inline-flex items-center gap-2 border border-ink/15 rounded-lg px-4 py-2 text-sm font-medium text-ink hover:bg-canvas transition">
+            Prescribe Medication
+        </a>
+        {% if not visit.is_admitted %}
+        <a href="{{ url_for('admissions.new_admission', visit_id=visit.visit_id, next=request.path) }}"
+           class="inline-flex items-center gap-2 border border-ink/15 rounded-lg px-4 py-2 text-sm font-medium text-ink hover:bg-canvas transition">
+            Admit Patient
+        </a>
+        {% endif %}
+    </div>
+    <p class="text-xs text-muted/60 mt-3">
+        Each of these returns you here once saved, so triage isn't interrupted.
+    </p>
+</div>
+
 {% endblock %}

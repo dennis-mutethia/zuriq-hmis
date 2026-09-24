@@ -11,6 +11,13 @@
     </a>
 </div>
 
+{% if patient %}
+<div class="bg-brand-50 border border-brand-100 text-brand-700 rounded-lg px-4 py-3 text-sm mb-6">
+    Booking a specialist for <strong>{{ patient.full_name }}</strong> (OP: {{ patient.out_patient_no or "—" }}) —
+    pick a consultant below.
+</div>
+{% endif %}
+
 <div class="bg-white rounded-xl border border-ink/10 overflow-x-auto">
     <table class="w-full text-sm text-left">
         <thead class="bg-canvas text-muted uppercase text-xs">
@@ -28,8 +35,13 @@
                 <td class="px-4 py-3 text-muted">{{ c.designation or "—" }}</td>
                 <td class="px-4 py-3 text-muted">{{ c.mobile_no or "—" }}</td>
                 <td class="px-4 py-3 text-right space-x-3">
+                    {% if patient %}
+                    <a href="{{ url_for('consultants.new_booking', consultant_id=c.consultant_id, patient_id=patient.patient_id) }}"
+                       class="text-brand-600 hover:text-brand-700 font-medium">Book for {{ patient.full_name.split(' ')[0] }}</a>
+                    {% else %}
                     <a href="{{ url_for('consultants.edit_consultant', consultant_id=c.consultant_id) }}" class="text-muted hover:text-ink">Edit</a>
                     <a href="{{ url_for('consultants.view_bookings', consultant_id=c.consultant_id) }}" class="text-brand-600 hover:text-brand-700 font-medium">Bookings</a>
+                    {% endif %}
                 </td>
             </tr>
             {% else %}

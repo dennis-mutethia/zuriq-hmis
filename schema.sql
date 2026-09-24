@@ -382,7 +382,7 @@ CREATE INDEX idx_bank_rec_items_bank_rec_id ON bank_rec_items (bank_rec_id);
 CREATE TABLE rooms (
     room_id    SERIAL PRIMARY KEY,
     name       TEXT NOT NULL UNIQUE,
-    function     TEXT CHECK (function IN ('triage', 'consultation', 'lab', 'pharmacy', 'billing', 'reception'))
+    function     TEXT CHECK (function IN ('triage', 'consultation', 'lab', 'pharmacy', 'billing', 'reception', 'theatre'))
 );
 
 CREATE TABLE queue_entries (
@@ -500,7 +500,13 @@ CREATE TABLE admissions (
     admitted_by            INTEGER REFERENCES system_users(system_user_id),
     admitting_doctor       TEXT,
     discharging_doctor     TEXT,
-    received_by_nurse      TEXT
+    received_by_nurse      TEXT,
+    admission_diagnosis      TEXT,
+    discharge_outcome          TEXT CHECK (discharge_outcome IN ('Alive', 'Deceased', 'Referred', 'Discharged Against Medical Advice')),
+    discharge_diagnosis           TEXT,
+    discharge_notes                 TEXT,   -- referral / specialist / follow-up instructions
+    discharge_medication               TEXT,
+    discharged_by                        INTEGER REFERENCES system_users(system_user_id)
 );
 
 -- Bed assignment history — a patient can move beds/wards during one
